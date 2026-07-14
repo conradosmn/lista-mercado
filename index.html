@@ -42,9 +42,12 @@
   }
   .nova-lista input[type="date"]{
     -webkit-appearance:none;appearance:none;display:block;
-    width:100%;min-width:0;max-width:100%;min-height:42px;text-align:left;
+    width:100%!important;min-width:0;max-width:100%;
+    -webkit-min-logical-width:calc(100% - 20px); /* hack p/ Safari iOS respeitar a largura */
+    height:42px;text-align:left;overflow:hidden;
   }
-  .nova-lista input[type="date"]::-webkit-date-and-time-value{text-align:left}
+  .nova-lista input[type="date"]::-webkit-date-and-time-value{text-align:left;margin:0}
+  .nova-lista{overflow:hidden} /* garantia extra: nada vaza da caixa */
   .nova-lista .acoes2{display:flex;gap:8px;margin-top:12px}
   .nova-lista .acoes2 button{
     flex:1;font:inherit;font-size:.72rem;padding:9px;border-radius:2px;cursor:pointer;
