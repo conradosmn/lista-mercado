@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lista de Mercado</title>
+<style>
+  :root{
+    --papel:#FBF8F1; --tinta:#2B2A26; --verde:#1E7A46;
+    --vermelho:#C0392B; --amarelo:#FFD23F; --cinza:#8B887F; --fundo:#EDE9DF;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{
+    font-family:ui-monospace,'Cascadia Mono','Courier New',monospace;
+    background:var(--fundo); color:var(--tinta); min-height:100vh;
+    padding:16px 12px 48px; display:flex; justify-content:center;
+  }
+  .cupom{
+    width:100%; max-width:460px; background:var(--papel);
+    box-shadow:0 4px 18px rgba(43,42,38,.18); padding:22px 18px 34px;
+  }
+  header{text-align:center;border-bottom:2px dashed var(--tinta);padding-bottom:12px;margin-bottom:12px}
+  header h1{font-size:1.05rem;letter-spacing:.3em;font-weight:700;text-transform:uppercase}
+  header .sub{font-size:.68rem;color:var(--cinza);letter-spacing:.15em;margin-top:4px}
+
+  /* seletor de listas */
+  .listas-row{display:flex;gap:8px;margin-bottom:10px}
+  .listas-row select{
+    flex:1;font:inherit;font-size:.82rem;padding:9px 8px;
+    border:1.5px solid var(--tinta);border-radius:2px;background:#fff;min-width:0;
+  }
+  .listas-row button{
+    font:inherit;font-size:.75rem;font-weight:700;padding:0 14px;
+    border:1.5px solid var(--tinta);border-radius:2px;background:var(--amarelo);cursor:pointer;
+  }
+  .nova-lista{display:none;border:2px dashed var(--tinta);padding:12px;border-radius:2px;margin-bottom:12px;background:#fff}
+  .nova-lista.aberto{display:block}
+  .nova-lista label{font-size:.68rem;color:var(--cinza);display:block;margin:8px 0 3px;text-transform:uppercase;letter-spacing:.05em}
+  .nova-lista input{
+    width:100%;font:inherit;font-size:.88rem;padding:9px 10px;
+    border:1.5px solid var(--tinta);border-radius:2px;background:#fff;
+  }
+  .nova-lista .acoes2{display:flex;gap:8px;margin-top:12px}
+  .nova-lista .acoes2 button{
+    flex:1;font:inherit;font-size:.72rem;padding:9px;border-radius:2px;cursor:pointer;
+    border:1.5px solid var(--tinta);text-transform:uppercase;letter-spacing:.05em;
+  }
+  .nova-lista .criar{background:var(--verde);border-color:var(--verde);color:#fff;font-weight:700}
+
+  .barra{
+    display:flex;justify-content:space-between;align-items:center;
+    font-size:.72rem;color:var(--cinza);margin-bottom:10px;gap:8px;
+  }
+  .barra b{color:var(--verde)}
+  .status{display:flex;align-items:center;gap:5px;flex:none}
+  .status .dot{width:8px;height:8px;border-radius:50%;background:var(--cinza)}
+  .status.online .dot{background:var(--verde)}
+  .status.offline .dot{background:var(--vermelho)}
+
+  .add-row{display:flex;gap:8px;margin-bottom:12px}
+  .add-row input{
+    flex:1;font:inherit;font-size:.95rem;padding:11px 12px;
+    border:1.5px solid var(--tinta);background:#fff;border-radius:2px;min-width:0;
+  }
+  .add-row input:focus{outline:2px solid var(--amarelo);outline-offset:1px}
+  .add-row button{
+    font:inherit;font-weight:700;font-size:1.2rem;line-height:1;
+    padding:0 18px;border:1.5px solid var(--tinta);border-radius:2px;
+    background:var(--amarelo);cursor:pointer;
+  }
+
+  ul{list-style:none}
+  li{display:flex;align-items:flex-start;gap:10px;padding:10px 2px;border-bottom:1px dashed #CFC9BA}
+  li.carrinho .nome-txt{text-decoration:line-through;color:var(--cinza)}
+  li.carrinho .check{background:var(--verde);border-color:var(--verde);color:#fff}
+  .check{
+    flex:none;width:26px;height:26px;border:1.5px solid var(--tinta);border-radius:2px;
+    background:#fff;cursor:pointer;font-size:.95rem;display:flex;
+    align-items:center;justify-content:center;color:transparent;margin-top:2px;
+  }
+  .meio{flex:1;min-width:0}
+  .nome-txt{font-size:.95rem;word-break:break-word;cursor:pointer;display:block}
+  .meio input.edit-nome{
+    width:100%;font:inherit;font-size:.95rem;padding:4px 6px;
+    border:1.5px solid var(--verde);border-radius:2px;background:#fff;
+  }
+  .preco{
+    display:inline-block;margin-top:3px;font-size:.72rem;cursor:pointer;
+    color:var(--verde);font-weight:700;letter-spacing:.03em;
+  }
+  .preco.sem{color:var(--cinza);font-weight:400}
+  .preco-edit{display:inline-flex;gap:6px;margin-top:4px;align-items:center}
+  .preco-edit input{
+    width:92px;font:inherit;font-size:.82rem;padding:4px 6px;
+    border:1.5px solid var(--verde);border-radius:2px;background:#fff;
+  }
+  .preco-edit button{
+    font:inherit;font-size:.72rem;padding:4px 8px;border-radius:2px;cursor:pointer;
+    border:1.5px solid var(--verde);background:var(--verde);color:#fff;font-weight:700;
+  }
+  .acoes{flex:none;display:flex;gap:4px}
+  .acoes button{
+    width:30px;height:30px;border:none;background:transparent;cursor:pointer;
+    font-size:.9rem;border-radius:2px;color:var(--cinza);
+  }
+  .acoes .del:hover{color:var(--vermelho)}
+
+  .vazio{text-align:center;color:var(--cinza);font-size:.8rem;padding:26px 8px;line-height:1.6}
+
+  .totais{
+    border-top:2px dashed var(--tinta);margin-top:14px;padding-top:10px;
+    font-size:.8rem;display:flex;flex-direction:column;gap:4px;
+  }
+  .totais .linha{display:flex;justify-content:space-between}
+  .totais .grande{font-size:.95rem;font-weight:700}
+  .totais .grande .v{color:var(--verde)}
+  .totais .mini{color:var(--cinza);font-size:.7rem}
+
+  .rodape{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+  .rodape button{
+    flex:1;min-width:130px;font:inherit;font-size:.7rem;letter-spacing:.05em;
+    padding:9px 8px;border:1.5px solid var(--tinta);background:#fff;
+    border-radius:2px;cursor:pointer;text-transform:uppercase;
+  }
+  .rodape .perigo{color:var(--vermelho);border-color:var(--vermelho)}
+
+  .import-box{display:none;margin-top:14px;border:2px dashed var(--verde);padding:12px;border-radius:2px;background:#F4FAF6}
+  .import-box.aberto{display:block}
+  .import-box p{font-size:.7rem;color:var(--cinza);margin-bottom:8px;line-height:1.5}
+  .import-box textarea{
+    width:100%;min-height:120px;font:inherit;font-size:.85rem;padding:10px;
+    border:1.5px solid var(--tinta);border-radius:2px;resize:vertical;background:#fff;
+  }
+  .import-acoes{display:flex;gap:8px;margin-top:8px}
+  .import-acoes button{
+    flex:1;font:inherit;font-size:.72rem;padding:9px;border-radius:2px;cursor:pointer;
+    border:1.5px solid var(--tinta);text-transform:uppercase;letter-spacing:.05em;
+  }
+  .import-acoes .confirmar{background:var(--verde);border-color:var(--verde);color:#fff;font-weight:700}
+  .import-acoes .cancelar{background:#fff}
+
+  .toast{
+    position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);
+    background:var(--tinta);color:var(--papel);font-size:.78rem;padding:10px 18px;
+    border-radius:3px;opacity:0;transition:.25s;pointer-events:none;
+    max-width:90vw;text-align:center;
+  }
+  .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+  .erro-config{
+    background:#FDECEA;border:1.5px solid var(--vermelho);font-size:.75rem;
+    padding:12px;border-radius:2px;margin-bottom:12px;line-height:1.6;display:none;
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main class="cupom">
+  <header>
+    <h1>Lista de Mercado</h1>
+    <div class="sub" id="subData">* * * * * *</div>
+  </header>
+
+  <div class="erro-config" id="erroConfig">
+    ⚠️ <b>Firebase não configurado.</b> Cole seu firebaseConfig no bloco marcado "COLE AQUI" do index.html. Passo a passo no README.
+  </div>
+
+  <div class="listas-row">
+    <select id="selLista" aria-label="Escolher lista"></select>
+    <button id="btnNovaLista">＋ Nova</button>
+  </div>
+
+  <div class="nova-lista" id="novaListaBox">
+    <label for="nlNome">Nome da lista</label>
+    <input id="nlNome" type="text" placeholder="Ex.: Compra do mês">
+    <label for="nlData">Data</label>
+    <input id="nlData" type="date">
+    <div class="acoes2">
+      <button class="criar" id="btnCriarLista">Criar lista</button>
+      <button id="btnCancelarLista">Cancelar</button>
+    </div>
+  </div>
+
+  <div class="barra">
+    <span><b id="qtdCarrinho">0</b>/<span id="qtdTotal">0</span> no carrinho</span>
+    <span class="status" id="status"><span class="dot"></span><span id="statusTxt">conectando…</span></span>
+  </div>
+
+  <div class="add-row">
+    <input id="novoItem" type="text" placeholder="Ex.: 2kg arroz" autocomplete="off">
+    <button id="btnAdd" aria-label="Adicionar item">+</button>
+  </div>
+
+  <ul id="lista"></ul>
+  <div class="vazio" id="msgVazio">Carregando…</div>
+
+  <div class="totais" id="totais" style="display:none">
+    <div class="linha grande"><span>TOTAL NO CARRINHO</span><span class="v" id="totalCarrinho">R$ 0,00</span></div>
+    <div class="linha mini"><span id="infoPrecos"></span><span id="totalGeral"></span></div>
+  </div>
+
+  <div class="rodape">
+    <button id="btnImport">📋 Importar do WhatsApp</button>
+    <button id="btnLimparCarrinho">Limpar comprados</button>
+    <button id="btnExcluirLista" class="perigo">Excluir esta lista</button>
+  </div>
+
+  <div class="import-box" id="importBox">
+    <p>Cole o texto copiado do WhatsApp. Marcadores (-, *, •, números), horários e nome de quem enviou são removidos — cada linha vira um item.</p>
+    <textarea id="importTexto" placeholder="- arroz&#10;- 1kg feijão&#10;- sabão em pó"></textarea>
+    <div class="import-acoes">
+      <button class="confirmar" id="btnConfirmarImport">Importar itens</button>
+      <button class="cancelar" id="btnCancelarImport">Cancelar</button>
+    </div>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, onValue, set, update, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+/* ============================================================
+   COLE AQUI o firebaseConfig do seu projeto
+   ============================================================ */
+const firebaseConfig = {
+  apiKey: "AIzaSyDUS3xDdiPDJ2tu7dxEb80jc6neW34VqP8",
+  authDomain: "lista-mercado-e0f72.firebaseapp.com",
+  databaseURL: "https://lista-mercado-e0f72-default-rtdb.firebaseio.com",
+  projectId: "lista-mercado-e0f72",
+  storageBucket: "lista-mercado-e0f72.firebasestorage.app",
+  messagingSenderId: "41120536637",
+  appId: "1:41120536637:web:bdbdf71f12173994b23254"
+};
+
+/* Troque por uma string longa e difícil de adivinhar — é a "senha" do seu app */
+const APP_ID = "mercado-Waj4z6XgjjePdsQnknNH";
+/* ============================================================ */
+
+let listas = {};          // { listaId: {nome, data, criadaEm, itens:{}} }
+let listaAtual = null;    // id da lista selecionada
+let editandoId = null;
+let precoEditandoId = null;
+let confirmando = null;
+let db = null;
+
+const $ = id => document.getElementById(id);
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const brl = v => (v||0).toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+
+function toast(msg){
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 2400);
+}
+function setStatus(cls, txt){
+  $('status').className = 'status ' + cls;
+  $('statusTxt').textContent = txt;
+}
+function pathLista(id){ return `mercado/${APP_ID}/listas/${id}`; }
+function pathItem(itemId){ return `${pathLista(listaAtual)}/itens/${itemId}`; }
+
+function dataBR(iso){ // '2026-07-11' -> '11/07/2026'
+  if(!iso) return '';
+  const [a,m,d] = iso.split('-');
+  return `${d}/${m}/${a}`;
+}
+function hojeISO(){
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+/* preço digitado em pt-BR: "12,50" ou "1.234,56" ou "12.5" */
+function parsePreco(txt){
+  let s = String(txt).trim().replace(/[R$\s]/g,'');
+  if(!s) return null;
+  if(s.includes(',')) s = s.replace(/\./g,'').replace(',','.');
+  const v = parseFloat(s);
+  return (isFinite(v) && v >= 0) ? Math.round(v*100)/100 : null;
+}
+
+// ---- Firebase ----
+if (firebaseConfig.apiKey === "COLE_AQUI") {
+  $('erroConfig').style.display = 'block';
+  $('msgVazio').textContent = 'Configure o Firebase para usar o app.';
+  setStatus('offline', 'sem config');
+} else {
+  const app = initializeApp(firebaseConfig);
+  db = getDatabase(app);
+
+  onValue(ref(db, `mercado/${APP_ID}/listas`), snap => {
+    listas = snap.val() || {};
+    // garante lista selecionada válida
+    if(!listaAtual || !listas[listaAtual]){
+      const salva = localStorage.getItem('mercado_listaAtual');
+      if(salva && listas[salva]) listaAtual = salva;
+      else {
+        const ids = Object.keys(listas).sort((a,b)=>(listas[b].data||'').localeCompare(listas[a].data||''));
+        listaAtual = ids[0] || null;
+      }
+    }
+    if(!listaAtual && db){
+      // primeira vez: cria a lista de hoje automaticamente
+      criarLista('Compras', hojeISO());
+      return;
+    }
+    render();
+    setStatus('online', 'ao vivo');
+  }, err => {
+    console.error(err);
+    setStatus('offline', 'sem conexão');
+    toast('Erro ao conectar. Confira as regras do Realtime Database.');
+  });
+
+  onValue(ref(db, '.info/connected'), snap => {
+    if (snap.val() === true) setStatus('online', 'ao vivo');
+    else setStatus('offline', 'reconectando…');
+  });
+}
+
+function criarLista(nome, dataISO){
+  const id = uid();
+  set(ref(db, pathLista(id)), { nome: nome || 'Compras', data: dataISO || hojeISO(), criadaEm: Date.now() });
+  listaAtual = id;
+  localStorage.setItem('mercado_listaAtual', id);
+}
+
+// ---- parser do WhatsApp ----
+function limparLinha(linha){
+  let s = linha.trim();
+  if(!s) return '';
+  s = s.replace(/^\[?\d{1,2}[\/.]\d{1,2}([\/.]\d{2,4})?,?\s+\d{1,2}:\d{2}(:\d{2})?\]?\s*[-–]?\s*/,'');
+  s = s.replace(/^[^:\n]{1,40}:\s+(?=\S)/,'');
+  s = s.replace(/^[\-\*•▪●○◦✓✔]+\s*/,'');
+  s = s.replace(/^\[\s*[xX]?\s*\]\s*/,'');
+  s = s.replace(/^\d{1,3}\s*[\.\)\-–]\s*/,'');
+  return s.trim();
+}
+function parsearImport(texto){
+  const out = [];
+  texto.split(/\r?\n/).forEach(l => {
+    const s = limparLinha(l);
+    if(!s) return;
+    if(/mensagem apagada|mídia oculta|criptografia de ponta|<anexado:/i.test(s)) return;
+    out.push(s);
+  });
+  return out;
+}
+
+// ---- render ----
+function render(){
+  // seletor de listas (mais recentes primeiro)
+  const sel = $('selLista');
+  sel.innerHTML = '';
+  Object.entries(listas)
+    .sort((a,b) => (b[1].data||'').localeCompare(a[1].data||'') || (b[1].criadaEm||0)-(a[1].criadaEm||0))
+    .forEach(([id, l]) => {
+      const opt = document.createElement('option');
+      opt.value = id;
+      const n = Object.keys(l.itens||{}).length;
+      opt.textContent = `${dataBR(l.data)} — ${l.nome}${n ? ` (${n})` : ''}`;
+      if(id === listaAtual) opt.selected = true;
+      sel.appendChild(opt);
+    });
+
+  const lst = listas[listaAtual];
+  $('subData').textContent = lst ? `* * * ${dataBR(lst.data)} — ${lst.nome.toUpperCase()} * * *` : '* * * * * *';
+
+  const ul = $('lista');
+  ul.innerHTML = '';
+  const itens = lst ? (lst.itens || {}) : {};
+  const arr = Object.entries(itens)
+    .map(([id, v]) => ({ id, ...v }))
+    .sort((a,b) => (a.carrinho?1:0)-(b.carrinho?1:0) || (a.ordem||0)-(b.ordem||0));
+
+  arr.forEach(item => {
+    const li = document.createElement('li');
+    if(item.carrinho) li.className = 'carrinho';
+
+    const chk = document.createElement('button');
+    chk.className = 'check';
+    chk.setAttribute('aria-label', item.carrinho ? 'Tirar do carrinho' : 'Marcar no carrinho');
+    chk.textContent = '✓';
+    chk.onclick = () => {
+      const vaiMarcar = !item.carrinho;
+      update(ref(db, pathItem(item.id)), { carrinho: vaiMarcar });
+      // marcou e ainda não tem preço? já abre o campo de preço
+      if(vaiMarcar && item.preco == null){ precoEditandoId = item.id; }
+    };
+
+    const meio = document.createElement('div');
+    meio.className = 'meio';
+
+    if(editandoId === item.id){
+      const inp = document.createElement('input');
+      inp.className = 'edit-nome';
+      inp.value = item.nome;
+      inp.onkeydown = ev => {
+        if(ev.key === 'Enter') confirmarEdicao(item.id, inp.value);
+        if(ev.key === 'Escape'){ editandoId = null; render(); }
+      };
+      inp.onblur = () => confirmarEdicao(item.id, inp.value);
+      meio.appendChild(inp);
+      setTimeout(() => { inp.focus(); inp.select(); }, 0);
+    } else {
+      const nome = document.createElement('span');
+      nome.className = 'nome-txt';
+      nome.textContent = item.nome;
+      nome.onclick = () => { editandoId = item.id; render(); };
+      meio.appendChild(nome);
+
+      if(precoEditandoId === item.id){
+        const box = document.createElement('span');
+        box.className = 'preco-edit';
+        const inp = document.createElement('input');
+        inp.inputMode = 'decimal';
+        inp.placeholder = 'R$ 0,00';
+        inp.value = item.preco != null ? String(item.preco).replace('.',',') : '';
+        const ok = document.createElement('button');
+        ok.textContent = 'OK';
+        const salvarPreco = () => {
+          const v = parsePreco(inp.value);
+          precoEditandoId = null;
+          update(ref(db, pathItem(item.id)), { preco: v });
+        };
+        ok.onclick = salvarPreco;
+        inp.onkeydown = ev => {
+          if(ev.key === 'Enter') salvarPreco();
+          if(ev.key === 'Escape'){ precoEditandoId = null; render(); }
+        };
+        box.append(inp, ok);
+        meio.appendChild(box);
+        setTimeout(() => inp.focus(), 0);
+      } else {
+        const preco = document.createElement('span');
+        preco.className = 'preco' + (item.preco == null ? ' sem' : '');
+        preco.textContent = item.preco != null ? brl(item.preco) : '＋ preço';
+        preco.onclick = () => { precoEditandoId = item.id; editandoId = null; render(); };
+        meio.appendChild(preco);
+      }
+    }
+
+    const acoes = document.createElement('span');
+    acoes.className = 'acoes';
+    const btnEdit = document.createElement('button');
+    btnEdit.textContent = '✏️';
+    btnEdit.setAttribute('aria-label','Editar');
+    btnEdit.onclick = () => { editandoId = item.id; precoEditandoId = null; render(); };
+    const btnDel = document.createElement('button');
+    btnDel.className = 'del';
+    btnDel.textContent = '✕';
+    btnDel.setAttribute('aria-label','Remover');
+    btnDel.onclick = () => remove(ref(db, pathItem(item.id)));
+    acoes.append(btnEdit, btnDel);
+
+    li.append(chk, meio, acoes);
+    ul.appendChild(li);
+  });
+
+  const vazio = $('msgVazio');
+  vazio.style.display = arr.length ? 'none' : 'block';
+  if(db) vazio.innerHTML = 'Lista vazia.<br>Adicione um item acima ou importe do WhatsApp.';
+
+  // contadores e totais
+  const noCarrinho = arr.filter(x => x.carrinho);
+  $('qtdTotal').textContent = arr.length;
+  $('qtdCarrinho').textContent = noCarrinho.length;
+
+  const totCarrinho = noCarrinho.reduce((s,x) => s + (x.preco || 0), 0);
+  const comPreco = arr.filter(x => x.preco != null);
+  const totGeral = comPreco.reduce((s,x) => s + x.preco, 0);
+  const semPrecoCarrinho = noCarrinho.filter(x => x.preco == null).length;
+
+  $('totais').style.display = arr.length ? 'flex' : 'none';
+  $('totalCarrinho').textContent = brl(totCarrinho);
+  $('infoPrecos').textContent = semPrecoCarrinho
+    ? `${semPrecoCarrinho} item(ns) no carrinho sem preço`
+    : `${comPreco.length} item(ns) com preço`;
+  $('totalGeral').textContent = comPreco.length ? `lista toda: ${brl(totGeral)}` : '';
+}
+
+function confirmarEdicao(id, valor){
+  if(editandoId !== id) return;
+  editandoId = null;
+  valor = valor.trim();
+  if(!valor){ render(); return; }
+  update(ref(db, pathItem(id)), { nome: valor });
+}
+
+function adicionarItem(nome){
+  const id = uid();
+  set(ref(db, pathItem(id)), { nome, carrinho: false, preco: null, ordem: Date.now() });
+}
+
+// ---- eventos ----
+$('selLista').onchange = function(){
+  listaAtual = this.value;
+  localStorage.setItem('mercado_listaAtual', listaAtual);
+  editandoId = precoEditandoId = null;
+  render();
+};
+
+$('btnNovaLista').onclick = () => {
+  $('nlData').value = hojeISO();
+  $('nlNome').value = '';
+  $('novaListaBox').classList.toggle('aberto');
+  $('nlNome').focus();
+};
+$('btnCancelarLista').onclick = () => $('novaListaBox').classList.remove('aberto');
+$('btnCriarLista').onclick = () => {
+  if(!db) return;
+  criarLista($('nlNome').value.trim() || 'Compras', $('nlData').value || hojeISO());
+  $('novaListaBox').classList.remove('aberto');
+  toast('Lista criada.');
+};
+
+$('btnAdd').onclick = () => {
+  const inp = $('novoItem');
+  const nome = inp.value.trim();
+  if(!nome || !db || !listaAtual) return;
+  inp.value = '';
+  inp.focus();
+  adicionarItem(nome);
+};
+$('novoItem').onkeydown = ev => { if(ev.key === 'Enter') $('btnAdd').click(); };
+
+$('btnImport').onclick = () => {
+  $('importBox').classList.toggle('aberto');
+  $('importTexto').focus();
+};
+$('btnCancelarImport').onclick = () => {
+  $('importBox').classList.remove('aberto');
+  $('importTexto').value = '';
+};
+$('btnConfirmarImport').onclick = () => {
+  if(!db || !listaAtual) return;
+  const novos = parsearImport($('importTexto').value);
+  if(!novos.length){ toast('Nenhum item encontrado no texto.'); return; }
+  $('importTexto').value = '';
+  $('importBox').classList.remove('aberto');
+  const itens = (listas[listaAtual] && listas[listaAtual].itens) || {};
+  const existentes = new Set(Object.values(itens).map(x => x.nome.toLowerCase()));
+  let add = 0;
+  novos.forEach(n => {
+    if(!existentes.has(n.toLowerCase())){
+      adicionarItem(n);
+      existentes.add(n.toLowerCase());
+      add++;
+    }
+  });
+  toast(`${add} item(ns) importado(s)` + (novos.length-add ? `, ${novos.length-add} duplicado(s) ignorado(s)` : ''));
+};
+
+function limparComConfirmacao(tipo, btn, rotulo, fn){
+  if(confirmando === tipo){
+    confirmando = null;
+    btn.textContent = rotulo;
+    fn();
+    return;
+  }
+  confirmando = tipo;
+  btn.textContent = 'Toque de novo p/ confirmar';
+  setTimeout(() => {
+    if(confirmando === tipo){ confirmando = null; btn.textContent = rotulo; }
+  }, 3000);
+}
+$('btnLimparCarrinho').onclick = function(){
+  if(!db || !listaAtual) return;
+  const itens = (listas[listaAtual] && listas[listaAtual].itens) || {};
+  const comprados = Object.entries(itens).filter(([,v]) => v.carrinho);
+  if(!comprados.length){ toast('Nada marcado no carrinho.'); return; }
+  limparComConfirmacao('carrinho', this, 'Limpar comprados', () => {
+    comprados.forEach(([id]) => remove(ref(db, pathItem(id))));
+  });
+};
+$('btnExcluirLista').onclick = function(){
+  if(!db || !listaAtual) return;
+  limparComConfirmacao('lista', this, 'Excluir esta lista', () => {
+    const id = listaAtual;
+    listaAtual = null;
+    localStorage.removeItem('mercado_listaAtual');
+    remove(ref(db, pathLista(id)));
+    toast('Lista excluída.');
+  });
+};
+
+render();
+</script>
+</body>
+</html>
