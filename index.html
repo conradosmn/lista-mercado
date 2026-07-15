@@ -10,18 +10,24 @@
     --vermelho:#C0392B; --amarelo:#FFD23F; --cinza:#8B887F; --fundo:#EDE9DF;
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html{-webkit-text-size-adjust:100%}
   body{
     font-family:ui-monospace,'Cascadia Mono','Courier New',monospace;
     background:var(--fundo); color:var(--tinta); min-height:100vh;
-    padding:16px 12px 48px; display:flex; justify-content:center;
+    padding:clamp(6px,2vw,24px) clamp(6px,3vw,16px) calc(48px + env(safe-area-inset-bottom));
+    display:flex; justify-content:center;
   }
   .cupom{
     width:100%; max-width:460px; background:var(--papel);
-    box-shadow:0 4px 18px rgba(43,42,38,.18); padding:22px 18px 34px;
+    box-shadow:0 4px 18px rgba(43,42,38,.18);
+    padding:clamp(14px,4vw,22px) clamp(10px,4vw,18px) 34px;
   }
   header{text-align:center;border-bottom:2px dashed var(--tinta);padding-bottom:12px;margin-bottom:12px}
-  header h1{font-size:1.05rem;letter-spacing:.3em;font-weight:700;text-transform:uppercase}
-  header .sub{font-size:.68rem;color:var(--cinza);letter-spacing:.15em;margin-top:4px}
+  header h1{font-size:clamp(.92rem,4vw,1.05rem);letter-spacing:clamp(.12em,1.2vw,.3em);font-weight:700;text-transform:uppercase;white-space:nowrap}
+  header .sub{font-size:.68rem;color:var(--cinza);letter-spacing:clamp(.05em,.8vw,.15em);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  /* inputs com 16px no toque: impede o zoom automático do iOS ao focar */
+  input, select, textarea{font-size:16px!important}
 
   /* seletor de listas */
   .listas-row{display:flex;gap:8px;margin-bottom:10px}
@@ -78,16 +84,19 @@
   }
 
   ul{list-style:none}
-  li{display:flex;align-items:flex-start;gap:10px;padding:10px 2px;border-bottom:1px dashed #CFC9BA}
+  li{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px dashed #CFC9BA}
   li.carrinho .nome-txt{text-decoration:line-through;color:var(--cinza)}
   li.carrinho .check{background:var(--verde);border-color:var(--verde);color:#fff}
   .check{
-    flex:none;width:26px;height:26px;border:1.5px solid var(--tinta);border-radius:2px;
-    background:#fff;cursor:pointer;font-size:.95rem;display:flex;
-    align-items:center;justify-content:center;color:transparent;margin-top:2px;
+    flex:none;width:30px;height:30px;border:1.5px solid var(--tinta);border-radius:2px;
+    background:#fff;cursor:pointer;font-size:1rem;display:flex;
+    align-items:center;justify-content:center;color:transparent;
+    margin-top:2px;position:relative;
   }
+  /* área de toque invisível de 44px (recomendação p/ dedo) sem mudar o visual */
+  .check::after{content:'';position:absolute;inset:-8px}
   .meio{flex:1;min-width:0}
-  .nome-txt{font-size:.95rem;word-break:break-word;cursor:pointer;display:block}
+  .nome-txt{font-size:.95rem;word-break:break-word;cursor:pointer;display:block;padding:4px 0}
   .meio input.edit-nome{
     width:100%;font:inherit;font-size:.95rem;padding:4px 6px;
     border:1.5px solid var(--verde);border-radius:2px;background:#fff;
@@ -106,10 +115,24 @@
     font:inherit;font-size:.72rem;padding:4px 8px;border-radius:2px;cursor:pointer;
     border:1.5px solid var(--verde);background:var(--verde);color:#fff;font-weight:700;
   }
-  .acoes{flex:none;display:flex;gap:4px}
+  .linha2{display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap}
+  .qtd-ctrl{display:inline-flex;align-items:center;border:1.5px solid #CFC9BA;border-radius:2px;background:#fff}
+  .qtd-ctrl button{
+    width:28px;height:28px;border:none;background:transparent;cursor:pointer;
+    font-size:1rem;color:var(--tinta);line-height:1;position:relative;
+  }
+  .qtd-ctrl button::after{content:'';position:absolute;inset:-6px} /* área de toque maior */
+  .qtd-ctrl button:disabled{color:#CFC9BA;cursor:default}
+  .qtd-ctrl .q{min-width:24px;text-align:center;font-size:.8rem;font-weight:700}
+  .vezes{font-size:.68rem;color:var(--cinza)}
+  .peso-est{font-size:.7rem;color:var(--verde);font-weight:700;cursor:pointer;border-bottom:1px dotted var(--verde)}
+  .subtotal{font-size:.74rem;font-weight:700;color:var(--tinta)}
+  li.carrinho .subtotal{color:var(--cinza)}
+  .acoes button[aria-label="Alternar unidade/kg"]{font-size:.85rem}
+  .acoes{flex:none;display:flex;gap:2px}
   .acoes button{
-    width:30px;height:30px;border:none;background:transparent;cursor:pointer;
-    font-size:.9rem;border-radius:2px;color:var(--cinza);
+    width:38px;height:38px;border:none;background:transparent;cursor:pointer;
+    font-size:.95rem;border-radius:2px;color:var(--cinza);
   }
   .acoes .del:hover{color:var(--vermelho)}
 
@@ -159,6 +182,38 @@
     padding:12px;border-radius:2px;margin-bottom:12px;line-height:1.6;display:none;
   }
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+  /* ===== responsividade ===== */
+
+  /* telas bem estreitas (iPhone SE, Androids compactos) */
+  @media (max-width:360px){
+    header h1{letter-spacing:.08em}
+    .rodape button{min-width:100%}          /* botões empilham em coluna */
+    .listas-row button{padding:0 10px}
+    .barra{flex-wrap:wrap}
+  }
+
+  /* tablets e desktop: cupom maior e tipografia mais confortável */
+  @media (min-width:700px){
+    .cupom{max-width:560px;padding:30px 30px 42px}
+    header h1{font-size:1.25rem}
+    header .sub{font-size:.75rem}
+    .nome-txt{font-size:1.05rem}
+    .preco{font-size:.8rem}
+    .barra, .totais{font-size:.85rem}
+    .totais .grande{font-size:1.05rem}
+    .rodape button{font-size:.75rem;padding:11px 8px}
+    .vazio{font-size:.9rem}
+    /* hover só onde existe mouse */
+    .rodape button:hover, .listas-row button:hover{background:#F3EFE5}
+    .add-row button:hover{filter:brightness(.96)}
+  }
+
+  /* monitor largo: centraliza com respiro e sombra mais suave */
+  @media (min-width:1100px){
+    body{padding-top:40px}
+    .cupom{max-width:600px;box-shadow:0 8px 30px rgba(43,42,38,.15)}
+  }
 </style>
 </head>
 <body>
@@ -213,8 +268,8 @@
   </div>
 
   <div class="import-box" id="importBox">
-    <p>Cole o texto copiado do WhatsApp. Marcadores (-, *, •, números), horários e nome de quem enviou são removidos — cada linha vira um item.</p>
-    <textarea id="importTexto" placeholder="- arroz&#10;- 1kg feijão&#10;- sabão em pó"></textarea>
+    <p>Cole o texto copiado do WhatsApp. Cada linha vira um item, e a quantidade é detectada automaticamente: <b>2kg de arroz</b>, <b>arroz - 2</b>, <b>3x sabão</b>, <b>2 caixas de leite</b>. Datas, horários e marcadores são ignorados.</p>
+    <textarea id="importTexto" placeholder="2kg de arroz&#10;feijão - 3&#10;3x sabão em pó&#10;500g farinha"></textarea>
     <div class="import-acoes">
       <button class="confirmar" id="btnConfirmarImport">Importar itens</button>
       <button class="cancelar" id="btnCancelarImport">Cancelar</button>
@@ -336,25 +391,136 @@ function criarLista(nome, dataISO){
 }
 
 // ---- parser do WhatsApp ----
+// remove só o "lixo" de mensagem (data/hora, remetente, marcadores), sem mexer em quantidade
 function limparLinha(linha){
   let s = linha.trim();
   if(!s) return '';
   s = s.replace(/^\[?\d{1,2}[\/.]\d{1,2}([\/.]\d{2,4})?,?\s+\d{1,2}:\d{2}(:\d{2})?\]?\s*[-–]?\s*/,'');
   s = s.replace(/^[^:\n]{1,40}:\s+(?=\S)/,'');
-  s = s.replace(/^[\-\*•▪●○◦✓✔]+\s*/,'');
+  s = s.replace(/^[\*•▪●○◦✓✔]+\s*/,'');   // marcadores (mantém "-" p/ tratar como "arroz - 2")
   s = s.replace(/^\[\s*[xX]?\s*\]\s*/,'');
-  s = s.replace(/^\d{1,3}\s*[\.\)\-–]\s*/,'');
   return s.trim();
 }
+
+// quantidade só faz sentido como inteiro pequeno (é multiplicador de preço).
+// peso/volume fracionário ou grande (500g, 1,5kg) fica no nome e qtd=1.
+function qtdValida(n){ return Number.isInteger(n) && n >= 1 && n <= 50; }
+
+// tenta extrair {nome, qtd} de uma linha de texto
+function extrairItem(bruto){
+  let s = bruto.trim();
+  // remove um marcador "-" solto no início (ex.: "- 1kg feijão") antes de analisar
+  s = s.replace(/^[-–—]\s+/, '');
+  const UN = 'unidades?|un|und|pacotes?|pct|caixas?|cx|garrafas?|latas?|potes?|d[úu]zias?|fardos?|sacos?';
+  const PESO = 'kg|g|ml|l|lt|litros?|quilos?|gramas?';
+
+  // 1) "arroz - 2" | "arroz — 2" | "arroz: 2"  (número no fim depois de separador)
+  let m = s.match(/^(.+?)\s*[-–—:]\s*(\d{1,3})\s*$/);
+  if(m){ const q = +m[2]; if(qtdValida(q)) return { nome: limpaNome(m[1]), qtd: q }; }
+
+  // 2) "3x sabão" | "sabão 3x" | "3 x sabão"
+  m = s.match(/^(\d{1,3})\s*[xX]\s+(.+)$/) || s.match(/^(.+?)\s+(\d{1,3})\s*[xX]$/);
+  if(m){
+    const q = +(/^\d/.test(m[1]) ? m[1] : m[2]);
+    const nome = /^\d/.test(m[1]) ? m[2] : m[1];
+    if(qtdValida(q)) return { nome: limpaNome(nome), qtd: q };
+  }
+
+  // 3) "2 caixas de leite" | "2 pacotes arroz" | "2 unidades de X"
+  m = s.match(new RegExp(`^(\\d{1,3})\\s+(?:${UN})\\b\\s*(?:de\\s+)?(.*)$`, 'i'));
+  if(m){ const q = +m[1]; if(qtdValida(q) && m[2].trim()) return { nome: limpaNome(m[2]), qtd: q }; }
+
+  // 4) peso/volume no INÍCIO: "2kg de arroz", "500g farinha", "1,5kg açúcar", "2 kg arroz"
+  m = s.match(new RegExp(`^(\\d+(?:[.,]\\d+)?)\\s*(${PESO})\\b\\s*(?:de\\s+)?(.*)$`, 'i'));
+  if(m && m[3].trim()){
+    const num = parseFloat(m[1].replace(',', '.'));
+    if(qtdValida(num)) return { nome: limpaNome(m[3]), qtd: num };
+    return { nome: limpaNome(`${m[3]} ${m[1]}${m[2]}`), qtd: 1 };
+  }
+
+  // 5) peso/volume no FIM: "refrigerante 2l", "arroz 5kg" (peso inteiro pequeno vira qtd)
+  m = s.match(new RegExp(`^(.+?)\\s+(\\d+(?:[.,]\\d+)?)\\s*(${PESO})\\s*$`, 'i'));
+  if(m){
+    const num = parseFloat(m[2].replace(',', '.'));
+    if(qtdValida(num)) return { nome: limpaNome(m[1]), qtd: num };
+    // fracionário/grande: mantém tudo no nome
+    return { nome: limpaNome(s), qtd: 1 };
+  }
+
+  // 6) número puro no início: "2 arroz", "12 ovos"
+  m = s.match(/^(\d{1,3})\s*[-–.)]?\s+(.+)$/);
+  if(m){ const q = +m[1]; if(qtdValida(q)) return { nome: limpaNome(m[2]), qtd: q }; }
+
+  // nada reconhecido: item inteiro, qtd 1
+  return { nome: limpaNome(s), qtd: 1 };
+}
+
+// tira separadores/pontuação sobrando das bordas do nome
+function limpaNome(s){
+  return s.replace(/^[\s\-–—:.)]+/, '').replace(/\s+/g,' ').trim();
+}
+
 function parsearImport(texto){
   const out = [];
   texto.split(/\r?\n/).forEach(l => {
     const s = limparLinha(l);
     if(!s) return;
     if(/mensagem apagada|mídia oculta|criptografia de ponta|<anexado:/i.test(s)) return;
-    out.push(s);
+    const item = extrairItem(s);
+    if(item.nome) out.push(item);
   });
   return out;
+}
+
+// ---- itens vendidos por peso (frutas, legumes, verduras) ----
+// peso médio APROXIMADO por unidade, em kg. Serve pra estimar o total:
+// você conta as unidades, informa o R$/kg, e ele calcula qtd × pesoMédio × preço.
+const PESO_MEDIO = {
+  // frutas
+  banana:0.12, maca:0.15, pera:0.17, laranja:0.20, mexerica:0.15, tangerina:0.15,
+  limao:0.07, manga:0.35, abacate:0.25, mamao:1.0, abacaxi:1.5, melao:1.5,
+  melancia:5.0, goiaba:0.15, kiwi:0.10, pessego:0.15, ameixa:0.06, caqui:0.20,
+  maracuja:0.10, cocode:0.40, uva:0.50, morango:0.02, romã:0.30, roma:0.30,
+  // legumes e verduras
+  tomate:0.11, cebola:0.13, cenoura:0.08, batata:0.15, batatadoce:0.20,
+  alho:0.05, pimentao:0.15, pepino:0.20, chuchu:0.25, beterraba:0.15,
+  abobrinha:0.20, berinjela:0.25, abobora:2.0, mandioca:0.40, inhame:0.25,
+  gengibre:0.08, quiabo:0.02, vagem:0.01, milho:0.30, repolho:1.0,
+  alface:0.30, brocolis:0.40, couveflor:0.60, cebolinha:0.05, coentro:0.05,
+  salsa:0.05, rabanete:0.03, nabo:0.15, mandioquinha:0.10
+};
+
+// tira acentos e deixa minúsculo, p/ casar nomes independente de acento/plural
+function normaliza(txt){
+  return (txt||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+}
+// detecta se o nome do item é um produto vendido por peso; retorna kg/unidade médio ou null
+function detectarPesoMedio(nome){
+  const n = normaliza(nome);
+  // testa cada palavra do nome (singular e plural) contra a tabela
+  const palavras = n.split(/\s+/);
+  for(const p of palavras){
+    const sing = p.replace(/s$/,''); // remove plural simples
+    if(PESO_MEDIO[p] != null) return PESO_MEDIO[p];
+    if(PESO_MEDIO[sing] != null) return PESO_MEDIO[sing];
+  }
+  return null;
+}
+// modo efetivo do item: respeita override manual (item.modo), senão autodetecta
+function ehPorKg(item){
+  if(item.modo === 'kg') return true;
+  if(item.modo === 'unidade') return false;
+  return detectarPesoMedio(item.nome) != null;
+}
+// peso médio por unidade usado no cálculo (override do item ou tabela ou padrão 0,2kg)
+function pesoUnitDe(item){
+  return item.pesoUnit || detectarPesoMedio(item.nome) || 0.2;
+}
+// subtotal do item considerando o modo (por unidade ou por kg estimado)
+function subtotalDe(item){
+  const qtd = item.qtd || 1;
+  if(item.preco == null) return 0;
+  return ehPorKg(item) ? item.preco * pesoUnitDe(item) * qtd : item.preco * qtd;
 }
 
 // ---- render ----
@@ -424,7 +590,7 @@ function render(){
         box.className = 'preco-edit';
         const inp = document.createElement('input');
         inp.inputMode = 'decimal';
-        inp.placeholder = 'R$ 0,00';
+        inp.placeholder = ehPorKg(item) ? 'R$/kg' : 'R$ 0,00';
         inp.value = item.preco != null ? String(item.preco).replace('.',',') : '';
         const ok = document.createElement('button');
         ok.textContent = 'OK';
@@ -442,16 +608,81 @@ function render(){
         meio.appendChild(box);
         setTimeout(() => inp.focus(), 0);
       } else {
+        const porKg = ehPorKg(item);
         const preco = document.createElement('span');
         preco.className = 'preco' + (item.preco == null ? ' sem' : '');
-        preco.textContent = item.preco != null ? brl(item.preco) : '＋ preço';
+        preco.textContent = item.preco != null
+          ? brl(item.preco) + (porKg ? '/kg' : '')
+          : (porKg ? '＋ preço do kg' : '＋ preço');
         preco.onclick = () => { precoEditandoId = item.id; editandoId = null; render(); };
         meio.appendChild(preco);
+
+        // linha de quantidade + subtotal, só aparece quando há preço
+        if(item.preco != null){
+          const qtd = item.qtd || 1;
+          const linha2 = document.createElement('div');
+          linha2.className = 'linha2';
+
+          const ctrl = document.createElement('span');
+          ctrl.className = 'qtd-ctrl';
+          const menos = document.createElement('button');
+          menos.textContent = '−';
+          menos.setAttribute('aria-label','Diminuir quantidade');
+          menos.disabled = qtd <= 1;
+          menos.onclick = () => update(ref(db, pathItem(item.id)), { qtd: Math.max(1, qtd - 1) });
+          const q = document.createElement('span');
+          q.className = 'q';
+          q.textContent = qtd;
+          const mais = document.createElement('button');
+          mais.textContent = '+';
+          mais.setAttribute('aria-label','Aumentar quantidade');
+          mais.onclick = () => update(ref(db, pathItem(item.id)), { qtd: qtd + 1 });
+          ctrl.append(menos, q, mais);
+          linha2.appendChild(ctrl);
+
+          if(porKg){
+            // modo peso: mostra o peso estimado (tocável p/ ajustar) e usa R$/kg
+            const pesoUnit = pesoUnitDe(item);
+            const pesoTotal = pesoUnit * qtd;
+            const pesoEl = document.createElement('span');
+            pesoEl.className = 'peso-est';
+            pesoEl.textContent = '≈ ' + pesoTotal.toFixed(pesoTotal < 1 ? 3 : 2).replace('.',',') + ' kg';
+            pesoEl.title = 'Toque para ajustar o peso médio por unidade';
+            pesoEl.onclick = () => {
+              const atualG = Math.round(pesoUnit * 1000);
+              const resp = prompt(`Peso médio de 1 ${item.nome} (em gramas):`, atualG);
+              if(resp != null){
+                const g = parseInt(String(resp).replace(/\D/g,''), 10);
+                if(g > 0) update(ref(db, pathItem(item.id)), { pesoUnit: g / 1000 });
+              }
+            };
+            linha2.appendChild(pesoEl);
+          } else {
+            const vezes = document.createElement('span');
+            vezes.className = 'vezes';
+            vezes.textContent = '× ' + brl(item.preco);
+            linha2.appendChild(vezes);
+          }
+
+          const sub = document.createElement('span');
+          sub.className = 'subtotal';
+          sub.textContent = '= ' + brl(subtotalDe(item)) + (porKg ? ' (est.)' : '');
+          linha2.appendChild(sub);
+
+          meio.appendChild(linha2);
+        }
       }
     }
 
     const acoes = document.createElement('span');
     acoes.className = 'acoes';
+    // alternar entre "por unidade" (🔢) e "por kg" (⚖️)
+    const btnModo = document.createElement('button');
+    const porKgAtual = ehPorKg(item);
+    btnModo.textContent = porKgAtual ? '⚖️' : '🔢';
+    btnModo.title = porKgAtual ? 'Vendido por kg (tocar p/ mudar para unidade)' : 'Vendido por unidade (tocar p/ mudar para kg)';
+    btnModo.setAttribute('aria-label','Alternar unidade/kg');
+    btnModo.onclick = () => update(ref(db, pathItem(item.id)), { modo: porKgAtual ? 'unidade' : 'kg' });
     const btnEdit = document.createElement('button');
     btnEdit.textContent = '✏️';
     btnEdit.setAttribute('aria-label','Editar');
@@ -461,7 +692,7 @@ function render(){
     btnDel.textContent = '✕';
     btnDel.setAttribute('aria-label','Remover');
     btnDel.onclick = () => remove(ref(db, pathItem(item.id)));
-    acoes.append(btnEdit, btnDel);
+    acoes.append(btnModo, btnEdit, btnDel);
 
     li.append(chk, meio, acoes);
     ul.appendChild(li);
@@ -476,9 +707,10 @@ function render(){
   $('qtdTotal').textContent = arr.length;
   $('qtdCarrinho').textContent = noCarrinho.length;
 
-  const totCarrinho = noCarrinho.reduce((s,x) => s + (x.preco || 0), 0);
+  const subtotal = subtotalDe;
+  const totCarrinho = noCarrinho.reduce((s,x) => s + subtotal(x), 0);
   const comPreco = arr.filter(x => x.preco != null);
-  const totGeral = comPreco.reduce((s,x) => s + x.preco, 0);
+  const totGeral = comPreco.reduce((s,x) => s + subtotal(x), 0);
   const semPrecoCarrinho = noCarrinho.filter(x => x.preco == null).length;
 
   $('totais').style.display = arr.length ? 'flex' : 'none';
@@ -497,9 +729,9 @@ function confirmarEdicao(id, valor){
   update(ref(db, pathItem(id)), { nome: valor });
 }
 
-function adicionarItem(nome){
+function adicionarItem(nome, qtd){
   const id = uid();
-  set(ref(db, pathItem(id)), { nome, carrinho: false, preco: null, ordem: Date.now() });
+  set(ref(db, pathItem(id)), { nome, carrinho: false, preco: null, qtd: qtd || 1, ordem: Date.now() });
 }
 
 // ---- eventos ----
@@ -549,16 +781,28 @@ $('btnConfirmarImport').onclick = () => {
   $('importTexto').value = '';
   $('importBox').classList.remove('aberto');
   const itens = (listas[listaAtual] && listas[listaAtual].itens) || {};
-  const existentes = new Set(Object.values(itens).map(x => x.nome.toLowerCase()));
-  let add = 0;
+  // mapa nome->id dos existentes, p/ somar quantidade em vez de duplicar
+  const existentes = {};
+  Object.entries(itens).forEach(([id, v]) => { existentes[v.nome.toLowerCase()] = { id, qtd: v.qtd || 1 }; });
+  let add = 0, somados = 0;
   novos.forEach(n => {
-    if(!existentes.has(n.toLowerCase())){
-      adicionarItem(n);
-      existentes.add(n.toLowerCase());
+    const chave = n.nome.toLowerCase();
+    if(existentes[chave]){
+      // já existe: soma a quantidade importada à atual
+      const ex = existentes[chave];
+      const novaQtd = ex.qtd + n.qtd;
+      update(ref(db, pathItem(ex.id)), { qtd: novaQtd });
+      ex.qtd = novaQtd;
+      somados++;
+    } else {
+      adicionarItem(n.nome, n.qtd);
+      existentes[chave] = { id: null, qtd: n.qtd };
       add++;
     }
   });
-  toast(`${add} item(ns) importado(s)` + (novos.length-add ? `, ${novos.length-add} duplicado(s) ignorado(s)` : ''));
+  let msg = `${add} item(ns) importado(s)`;
+  if(somados) msg += `, ${somados} já existente(s) tiveram a quantidade somada`;
+  toast(msg);
 };
 
 function limparComConfirmacao(tipo, btn, rotulo, fn){
