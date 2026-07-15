@@ -962,7 +962,17 @@ function urlDoEspaco(id){
   return location.origin + location.pathname + '#' + id;
 }
 
+// só o espaço principal (o seu, sem #hash) pode criar espaços para outras pessoas
+const ehAdmin = (APP_ID === ESPACO_PADRAO);
+if(!ehAdmin){
+  const b = $('btnCriarEspaco');
+  if(b) b.style.display = 'none';
+  const cx = $('criarEspacoBox');
+  if(cx) cx.classList.remove('aberto');
+}
+
 $('btnCriarEspaco').onclick = () => {
+  if(!ehAdmin) return; // trava extra: ignora o clique fora do espaço principal
   const box = $('criarEspacoBox');
   box.classList.toggle('aberto');
   $('linkGerado').style.display = 'none';
@@ -972,7 +982,7 @@ $('btnCriarEspaco').onclick = () => {
 $('btnCancelarEspaco').onclick = () => $('criarEspacoBox').classList.remove('aberto');
 
 $('btnGerarLink').onclick = () => {
-  if(!db) return;
+  if(!db || !ehAdmin) return;
   const nome = $('ceNome').value.trim();
   if(!nome){ toast('Digite o nome da pessoa.'); return; }
   const id = 'mercado-' + slug(nome) + '-' + sufixoAleatorio();
