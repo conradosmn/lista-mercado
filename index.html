@@ -39,9 +39,39 @@
     font:inherit;font-size:.75rem;font-weight:700;padding:0 14px;
     border:1.5px solid var(--tinta);border-radius:2px;background:var(--amarelo);cursor:pointer;
   }
+  .mercado-row{display:flex;gap:8px;align-items:center;margin-bottom:12px}
+  .mercado-row .mercado-lbl{font-size:.95rem;flex:none}
+  .mercado-row select{
+    flex:1;font:inherit;font-size:.82rem;padding:9px 8px;min-width:0;
+    border:1.5px solid var(--tinta);border-radius:2px;background:#fff;
+  }
+  .mercado-row button{
+    font:inherit;font-size:.9rem;padding:0 12px;flex:none;
+    border:1.5px solid var(--tinta);border-radius:2px;background:#fff;cursor:pointer;height:36px;
+  }
+  .gerir-mercados{display:none;border:2px dashed var(--tinta);padding:12px;border-radius:2px;margin-bottom:12px;background:#fff}
+  .gerir-mercados.aberto{display:block}
+  .gerir-mercados p{font-size:.7rem;color:var(--cinza);margin-bottom:8px;line-height:1.5}
+  .gm-add{display:flex;gap:8px}
+  .gm-add input{
+    flex:1;font:inherit;padding:9px 10px;min-width:0;
+    border:1.5px solid var(--tinta);border-radius:2px;background:#fff;
+  }
+  .gm-add button{
+    font:inherit;font-weight:700;font-size:1.1rem;padding:0 16px;
+    border:1.5px solid var(--tinta);border-radius:2px;background:var(--amarelo);cursor:pointer;
+  }
+  .gm-lista{list-style:none;margin:10px 0 0}
+  .gm-lista li{display:flex;justify-content:space-between;align-items:center;padding:7px 2px;border-bottom:1px dashed #CFC9BA;font-size:.85rem}
+  .gm-lista li button{border:none;background:transparent;color:var(--cinza);cursor:pointer;font-size:.9rem;padding:4px 8px}
+  .gm-lista li button:hover{color:var(--vermelho)}
   .nova-lista{display:none;border:2px dashed var(--tinta);padding:12px;border-radius:2px;margin-bottom:12px;background:#fff}
   .nova-lista.aberto{display:block}
   .nova-lista label{font-size:.68rem;color:var(--cinza);display:block;margin:8px 0 3px;text-transform:uppercase;letter-spacing:.05em}
+  .nova-lista select{
+    width:100%;font:inherit;padding:9px 10px;
+    border:1.5px solid var(--tinta);border-radius:2px;background:#fff;
+  }
   .nova-lista input{
     width:100%;font:inherit;font-size:.88rem;padding:9px 10px;
     border:1.5px solid var(--tinta);border-radius:2px;background:#fff;
@@ -97,6 +127,12 @@
   .check::after{content:'';position:absolute;inset:-8px}
   .meio{flex:1;min-width:0}
   .nome-txt{font-size:.95rem;word-break:break-word;cursor:pointer;display:block;padding:4px 0}
+  .marca-chip{
+    display:inline-block;margin-top:2px;font-size:.68rem;cursor:pointer;
+    color:var(--verde);font-weight:700;background:#EAF5EE;border:1px solid #BFE0CC;
+    border-radius:10px;padding:1px 8px;letter-spacing:.02em;
+  }
+  .marca-chip.sem{color:var(--cinza);background:transparent;border:1px dashed #CFC9BA;font-weight:400}
   .meio input.edit-nome{
     width:100%;font:inherit;font-size:.95rem;padding:4px 6px;
     border:1.5px solid var(--verde);border-radius:2px;background:#fff;
@@ -126,6 +162,10 @@
   .qtd-ctrl .q{min-width:24px;text-align:center;font-size:.8rem;font-weight:700}
   .vezes{font-size:.68rem;color:var(--cinza)}
   .peso-est{font-size:.7rem;color:var(--verde);font-weight:700;cursor:pointer;border-bottom:1px dotted var(--verde)}
+  .peso-exato-btn{
+    font:inherit;font-size:.74rem;font-weight:700;color:#fff;background:var(--verde);
+    border:1.5px solid var(--verde);border-radius:2px;padding:3px 10px;cursor:pointer;
+  }
   .subtotal{font-size:.74rem;font-weight:700;color:var(--tinta)}
   li.carrinho .subtotal{color:var(--cinza)}
   .acoes button[aria-label="Alternar unidade/kg"]{font-size:.85rem}
@@ -259,11 +299,40 @@
     <button id="btnNovaLista">＋ Nova</button>
   </div>
 
+  <div class="mercado-row">
+    <span class="mercado-lbl">🏬</span>
+    <select id="selMercado" aria-label="Mercado desta compra"></select>
+    <button id="btnGerirMercados" title="Cadastrar/remover mercados">⚙️</button>
+    <button id="btnGerirMarcas" title="Cadastrar/remover marcas">🏷️</button>
+  </div>
+
+  <div class="gerir-mercados" id="gerirMercadosBox">
+    <p>Seus mercados. O selecionado acima fica salvo na lista atual.</p>
+    <div class="gm-add">
+      <input id="gmNome" type="text" placeholder="Ex.: Assaí, Atacadão, Mateus" autocomplete="off">
+      <button id="btnAddMercado">＋</button>
+    </div>
+    <ul class="gm-lista" id="gmLista"></ul>
+    <div class="acoes2"><button id="btnFecharMercados">Fechar</button></div>
+  </div>
+
+  <div class="gerir-mercados" id="gerirMarcasBox">
+    <p>Marcas que você usa. O parser reconhece essas no texto e separa do nome do produto (ex.: "arroz tio joão" → arroz + Tio João).</p>
+    <div class="gm-add">
+      <input id="mkNome" type="text" placeholder="Ex.: Tio João, Camil, Italac" autocomplete="off">
+      <button id="btnAddMarca">＋</button>
+    </div>
+    <ul class="gm-lista" id="mkLista"></ul>
+    <div class="acoes2"><button id="btnFecharMarcas">Fechar</button></div>
+  </div>
+
   <div class="nova-lista" id="novaListaBox">
     <label for="nlNome">Nome da lista</label>
     <input id="nlNome" type="text" placeholder="Ex.: Compra do mês">
     <label for="nlData">Data</label>
     <input id="nlData" type="date">
+    <label for="nlMercado">Mercado</label>
+    <select id="nlMercado"></select>
     <div class="acoes2">
       <button class="criar" id="btnCriarLista">Criar lista</button>
       <button id="btnCancelarLista">Cancelar</button>
@@ -291,7 +360,6 @@
   <div class="rodape">
     <button id="btnImport">📋 Importar do WhatsApp</button>
     <button id="btnQuantificar">🔢 Detectar qtd nos nomes</button>
-    <button id="btnCriarEspaco">👥 Criar espaço p/ alguém</button>
     <button id="btnLimparCarrinho">Limpar comprados</button>
     <button id="btnExcluirLista" class="perigo">Excluir esta lista</button>
   </div>
@@ -449,7 +517,22 @@ if (firebaseConfig.apiKey === "COLE_AQUI") {
     espacoNome = snap.val() || '';
     renderEspacoTag();
   });
+
+  // mercados cadastrados neste espaço
+  onValue(ref(db, `mercado/${APP_ID}/meta/mercados`), snap => {
+    mercados = snap.val() || {};
+    renderMercados();
+  });
+
+  // marcas conhecidas neste espaço (o parser reconhece essas no texto)
+  onValue(ref(db, `mercado/${APP_ID}/meta/marcas`), snap => {
+    marcas = snap.val() || {};
+    renderMarcas();
+  });
 }
+
+let mercados = {}; // { id: nome }
+let marcas = {};   // { id: nome }
 
 let espacoNome = '';
 function renderEspacoTag(){
@@ -465,11 +548,151 @@ function renomearEspaco(){
   set(ref(db, `mercado/${APP_ID}/meta/nome`), novo.trim());
 }
 
-function criarLista(nome, dataISO){
+function criarLista(nome, dataISO, mercadoId){
   const id = uid();
-  set(ref(db, pathLista(id)), { nome: nome || 'Compras', data: dataISO || hojeISO(), criadaEm: Date.now() });
+  const dados = { nome: nome || 'Compras', data: dataISO || hojeISO(), criadaEm: Date.now() };
+  if(mercadoId) dados.mercadoId = mercadoId;
+  set(ref(db, pathLista(id)), dados);
   listaAtual = id;
   localStorage.setItem(('mercado_listaAtual_' + APP_ID), id);
+}
+
+// preenche um <select> com os mercados cadastrados; marca o selecionado
+function preencherSelectMercados(sel, selecionadoId){
+  if(!sel) return;
+  sel.innerHTML = '';
+  const vazio = document.createElement('option');
+  vazio.value = '';
+  vazio.textContent = mercadosVazio() ? '— cadastre um mercado no ⚙️ —' : '— sem mercado —';
+  sel.appendChild(vazio);
+  Object.entries(mercados)
+    .sort((a,b) => (a[1]||'').localeCompare(b[1]||''))
+    .forEach(([id, nome]) => {
+      const opt = document.createElement('option');
+      opt.value = id;
+      opt.textContent = nome;
+      if(id === selecionadoId) opt.selected = true;
+      sel.appendChild(opt);
+    });
+}
+function mercadosVazio(){ return Object.keys(mercados).length === 0; }
+function nomeMercado(id){ return id && mercados[id] ? mercados[id] : ''; }
+
+function renderMercados(){
+  const lst = listaAtual ? listas[listaAtual] : null;
+  const mercadoAtual = lst ? lst.mercadoId : '';
+  // seletor do topo
+  preencherSelectMercados($('selMercado'), mercadoAtual);
+  // seletor dentro de "nova lista" (mantém o que já estava escolhido)
+  preencherSelectMercados($('nlMercado'), $('nlMercado') ? $('nlMercado').value : '');
+  // lista de gestão
+  const gm = $('gmLista');
+  if(gm){
+    gm.innerHTML = '';
+    Object.entries(mercados)
+      .sort((a,b) => (a[1]||'').localeCompare(b[1]||''))
+      .forEach(([id, nome]) => {
+        const li = document.createElement('li');
+        const sp = document.createElement('span'); sp.textContent = nome;
+        const del = document.createElement('button');
+        del.textContent = '✕'; del.title = 'Remover mercado';
+        del.onclick = () => remove(ref(db, `mercado/${APP_ID}/meta/mercados/${id}`));
+        li.append(sp, del);
+        gm.appendChild(li);
+      });
+    if(mercadosVazio()){
+      const li = document.createElement('li');
+      li.style.color = 'var(--cinza)'; li.style.borderBottom = 'none';
+      li.textContent = 'Nenhum mercado cadastrado ainda.';
+      gm.appendChild(li);
+    }
+  }
+}
+
+// ---- marcas ----
+function marcasVazio(){ return Object.keys(marcas).length === 0; }
+function nomeMarca(id){ return id && marcas[id] ? marcas[id] : ''; }
+// procura uma marca conhecida dentro do texto do item; retorna {marcaId, nomeSemMarca} ou null
+// trabalha por palavras, preservando o texto original (com acentos) do produto
+function detectarMarca(texto){
+  const palavras = texto.trim().split(/\s+/);
+  const norm = palavras.map(normaliza);
+  let achado = null;
+  // testa da marca com mais palavras p/ menos (evita casar parte de marca composta)
+  Object.entries(marcas)
+    .map(([id, nome]) => ({ id, nome, toks: normaliza(nome).split(/\s+/).filter(Boolean) }))
+    .sort((a,b) => b.toks.length - a.toks.length)
+    .forEach(({id, toks}) => {
+      if(achado || !toks.length) return;
+      // procura a sequência de tokens da marca dentro das palavras normalizadas
+      for(let i=0; i+toks.length <= norm.length; i++){
+        let bate = true;
+        for(let j=0; j<toks.length; j++){ if(norm[i+j] !== toks[j]){ bate = false; break; } }
+        if(bate){
+          const restante = palavras.slice(0, i).concat(palavras.slice(i + toks.length));
+          achado = { marcaId: id, nomeSemMarca: restante.join(' ').replace(/\s+/g,' ').trim() };
+          break;
+        }
+      }
+    });
+  return achado;
+}
+
+// escolher/trocar/cadastrar a marca de um item (prompt simples com a lista)
+function escolherMarca(item){
+  if(!db) return;
+  const lista = Object.entries(marcas).sort((a,b)=>(a[1]||'').localeCompare(b[1]||''));
+  let msg = 'Marca de "' + item.nome + '":\n\n';
+  lista.forEach(([id,nome], i) => { msg += (i+1) + ' - ' + nome + '\n'; });
+  msg += '0 - (sem marca)\n';
+  msg += 'ou digite um nome novo para cadastrar';
+  const resp = prompt(msg, item.marcaId && marcas[item.marcaId] ? marcas[item.marcaId] : '');
+  if(resp == null) return;
+  const txt = resp.trim();
+  if(txt === '0' || txt === ''){
+    update(ref(db, pathItem(item.id)), { marcaId: null });
+    return;
+  }
+  // escolheu por número?
+  const n = parseInt(txt, 10);
+  if(String(n) === txt && n >= 1 && n <= lista.length){
+    update(ref(db, pathItem(item.id)), { marcaId: lista[n-1][0] });
+    return;
+  }
+  // digitou um nome: reusa se já existe (ignora acento/maiúsculas), senão cadastra
+  const existente = lista.find(([,nome]) => normaliza(nome) === normaliza(txt));
+  if(existente){
+    update(ref(db, pathItem(item.id)), { marcaId: existente[0] });
+  } else {
+    const id = uid();
+    set(ref(db, `mercado/${APP_ID}/meta/marcas/${id}`), txt);
+    update(ref(db, pathItem(item.id)), { marcaId: id });
+    toast('Marca "' + txt + '" cadastrada.');
+  }
+}
+
+function renderMarcas(){
+  const gm = $('mkLista');
+  if(gm){
+    gm.innerHTML = '';
+    Object.entries(marcas)
+      .sort((a,b) => (a[1]||'').localeCompare(b[1]||''))
+      .forEach(([id, nome]) => {
+        const li = document.createElement('li');
+        const sp = document.createElement('span'); sp.textContent = nome;
+        const del = document.createElement('button');
+        del.textContent = '✕'; del.title = 'Remover marca';
+        del.onclick = () => remove(ref(db, `mercado/${APP_ID}/meta/marcas/${id}`));
+        li.append(sp, del);
+        gm.appendChild(li);
+      });
+    if(marcasVazio()){
+      const li = document.createElement('li');
+      li.style.color = 'var(--cinza)'; li.style.borderBottom = 'none';
+      li.textContent = 'Nenhuma marca cadastrada. Cadastre as que você usa (ex.: Tio João, Camil, Italac).';
+      gm.appendChild(li);
+    }
+  }
 }
 
 // ---- parser do WhatsApp ----
@@ -554,6 +777,13 @@ function parsearImport(texto){
     if(!s) return;
     if(/mensagem apagada|mídia oculta|criptografia de ponta|<anexado:/i.test(s)) return;
     const item = extrairItem(s);
+    if(!item.nome) return;
+    // reconhece marca conhecida dentro do nome e a separa
+    const marca = detectarMarca(item.nome);
+    if(marca && marca.nomeSemMarca){
+      item.nome = limpaNome(marca.nomeSemMarca);
+      item.marcaId = marca.marcaId;
+    }
     if(item.nome) out.push(item);
   });
   return out;
@@ -593,21 +823,31 @@ function detectarPesoMedio(nome){
   }
   return null;
 }
-// modo efetivo do item: respeita override manual (item.modo), senão autodetecta
-function ehPorKg(item){
-  if(item.modo === 'kg') return true;
-  if(item.modo === 'unidade') return false;
-  return detectarPesoMedio(item.nome) != null;
+// modo do item: 'unidade' | 'kg' (estimado por peso médio) | 'exato' (gramas digitados) | undefined (auto)
+// modo efetivo quando não há override manual: hortifrúti detectado vira 'kg', senão 'unidade'
+function modoDe(item){
+  if(item.modo === 'kg' || item.modo === 'unidade' || item.modo === 'exato') return item.modo;
+  return detectarPesoMedio(item.nome) != null ? 'kg' : 'unidade';
 }
-// peso médio por unidade usado no cálculo (override do item ou tabela ou padrão 0,2kg)
+function ehPorKg(item){ return modoDe(item) === 'kg'; }
+function ehPesoExato(item){ return modoDe(item) === 'exato'; }
+// peso médio por unidade usado no modo 'kg' (override do item ou tabela ou padrão 0,2kg)
 function pesoUnitDe(item){
   return item.pesoUnit || detectarPesoMedio(item.nome) || 0.2;
 }
-// subtotal do item considerando o modo (por unidade ou por kg estimado)
+// peso total em kg conforme o modo (p/ exibição)
+function pesoKgDe(item){
+  if(ehPesoExato(item)) return (item.gramas || 0) / 1000;
+  if(ehPorKg(item)) return pesoUnitDe(item) * (item.qtd || 1);
+  return 0;
+}
+// subtotal do item considerando o modo
 function subtotalDe(item){
-  const qtd = item.qtd || 1;
   if(item.preco == null) return 0;
-  return ehPorKg(item) ? item.preco * pesoUnitDe(item) * qtd : item.preco * qtd;
+  const qtd = item.qtd || 1;
+  if(ehPesoExato(item)) return item.preco * ((item.gramas || 0) / 1000); // R$/kg × peso real
+  if(ehPorKg(item)) return item.preco * pesoUnitDe(item) * qtd;          // R$/kg × peso estimado
+  return item.preco * qtd;                                                // R$ × unidades
 }
 
 // ---- render ----
@@ -627,7 +867,12 @@ function render(){
     });
 
   const lst = listas[listaAtual];
-  $('subData').textContent = lst ? `* * * ${dataBR(lst.data)} — ${lst.nome.toUpperCase()} * * *` : '* * * * * *';
+  const merc = lst && lst.mercadoId ? nomeMercado(lst.mercadoId) : '';
+  $('subData').textContent = lst
+    ? `* * * ${dataBR(lst.data)}${merc ? ' — ' + merc.toUpperCase() : ' — ' + lst.nome.toUpperCase()} * * *`
+    : '* * * * * *';
+  // mantém o seletor de mercado do topo em sincronia com a lista atual
+  preencherSelectMercados($('selMercado'), lst ? lst.mercadoId : '');
 
   const ul = $('lista');
   ul.innerHTML = '';
@@ -672,12 +917,21 @@ function render(){
       nome.onclick = () => { editandoId = item.id; render(); };
       meio.appendChild(nome);
 
+      // chip de marca (mostra a marca ou "+ marca"); toque escolhe/troca
+      const marcaChip = document.createElement('span');
+      const temMarca = item.marcaId && marcas[item.marcaId];
+      marcaChip.className = 'marca-chip' + (temMarca ? '' : ' sem');
+      marcaChip.textContent = temMarca ? '🏷️ ' + marcas[item.marcaId] : '🏷️ marca';
+      marcaChip.title = 'Escolher marca deste item';
+      marcaChip.onclick = () => escolherMarca(item);
+      meio.appendChild(marcaChip);
+
       if(precoEditandoId === item.id){
         const box = document.createElement('span');
         box.className = 'preco-edit';
         const inp = document.createElement('input');
         inp.inputMode = 'decimal';
-        inp.placeholder = ehPorKg(item) ? 'R$/kg' : 'R$ 0,00';
+        inp.placeholder = (ehPorKg(item) || ehPesoExato(item)) ? 'R$/kg' : 'R$ 0,00';
         inp.value = item.preco != null ? String(item.preco).replace('.',',') : '';
         const ok = document.createElement('button');
         ok.textContent = 'OK';
@@ -695,60 +949,80 @@ function render(){
         meio.appendChild(box);
         setTimeout(() => inp.focus(), 0);
       } else {
-        const porKg = ehPorKg(item);
+        const modo = modoDe(item);
+        const porKg = modo === 'kg';
+        const exato = modo === 'exato';
+        const usaKg = porKg || exato; // ambos usam preço por kg
         const preco = document.createElement('span');
         preco.className = 'preco' + (item.preco == null ? ' sem' : '');
         preco.textContent = item.preco != null
-          ? brl(item.preco) + (porKg ? '/kg' : '')
-          : (porKg ? '＋ preço do kg' : '＋ preço');
+          ? brl(item.preco) + (usaKg ? '/kg' : '')
+          : (usaKg ? '＋ preço do kg' : '＋ preço');
         preco.onclick = () => { precoEditandoId = item.id; editandoId = null; render(); };
         meio.appendChild(preco);
 
-        // linha de quantidade + subtotal, só aparece quando há preço
+        // segunda linha (quantidade/peso + subtotal), só quando há preço
         if(item.preco != null){
           const qtd = item.qtd || 1;
           const linha2 = document.createElement('div');
           linha2.className = 'linha2';
 
-          const ctrl = document.createElement('span');
-          ctrl.className = 'qtd-ctrl';
-          const menos = document.createElement('button');
-          menos.textContent = '−';
-          menos.setAttribute('aria-label','Diminuir quantidade');
-          menos.disabled = qtd <= 1;
-          menos.onclick = () => update(ref(db, pathItem(item.id)), { qtd: Math.max(1, qtd - 1) });
-          const q = document.createElement('span');
-          q.className = 'q';
-          q.textContent = qtd;
-          const mais = document.createElement('button');
-          mais.textContent = '+';
-          mais.setAttribute('aria-label','Aumentar quantidade');
-          mais.onclick = () => update(ref(db, pathItem(item.id)), { qtd: qtd + 1 });
-          ctrl.append(menos, q, mais);
-          linha2.appendChild(ctrl);
-
-          if(porKg){
-            // modo peso: mostra o peso estimado (tocável p/ ajustar) e usa R$/kg
-            const pesoUnit = pesoUnitDe(item);
-            const pesoTotal = pesoUnit * qtd;
-            const pesoEl = document.createElement('span');
-            pesoEl.className = 'peso-est';
-            pesoEl.textContent = '≈ ' + pesoTotal.toFixed(pesoTotal < 1 ? 3 : 2).replace('.',',') + ' kg';
-            pesoEl.title = 'Toque para ajustar o peso médio por unidade';
-            pesoEl.onclick = () => {
-              const atualG = Math.round(pesoUnit * 1000);
-              const resp = prompt(`Peso médio de 1 ${item.nome} (em gramas):`, atualG);
+          if(exato){
+            // modo peso exato: você digita os gramas reais da balança
+            const gramas = item.gramas || 0;
+            const pesoBtn = document.createElement('button');
+            pesoBtn.className = 'peso-exato-btn';
+            pesoBtn.textContent = gramas ? (gramas >= 1000 ? (gramas/1000).toFixed(3).replace('.',',')+' kg' : gramas+' g') : 'digitar peso';
+            pesoBtn.title = 'Toque para digitar o peso da balança (em gramas)';
+            pesoBtn.onclick = () => {
+              const resp = prompt(`Peso de "${item.nome}" na balança (gramas):`, gramas || '');
               if(resp != null){
                 const g = parseInt(String(resp).replace(/\D/g,''), 10);
-                if(g > 0) update(ref(db, pathItem(item.id)), { pesoUnit: g / 1000 });
+                update(ref(db, pathItem(item.id)), { gramas: (g > 0 ? g : 0) });
               }
             };
-            linha2.appendChild(pesoEl);
+            linha2.appendChild(pesoBtn);
           } else {
-            const vezes = document.createElement('span');
-            vezes.className = 'vezes';
-            vezes.textContent = '× ' + brl(item.preco);
-            linha2.appendChild(vezes);
+            // unidade e kg estimado usam o controle − q +
+            const ctrl = document.createElement('span');
+            ctrl.className = 'qtd-ctrl';
+            const menos = document.createElement('button');
+            menos.textContent = '−';
+            menos.setAttribute('aria-label','Diminuir quantidade');
+            menos.disabled = qtd <= 1;
+            menos.onclick = () => update(ref(db, pathItem(item.id)), { qtd: Math.max(1, qtd - 1) });
+            const q = document.createElement('span');
+            q.className = 'q';
+            q.textContent = qtd;
+            const mais = document.createElement('button');
+            mais.textContent = '+';
+            mais.setAttribute('aria-label','Aumentar quantidade');
+            mais.onclick = () => update(ref(db, pathItem(item.id)), { qtd: qtd + 1 });
+            ctrl.append(menos, q, mais);
+            linha2.appendChild(ctrl);
+
+            if(porKg){
+              const pesoUnit = pesoUnitDe(item);
+              const pesoTotal = pesoUnit * qtd;
+              const pesoEl = document.createElement('span');
+              pesoEl.className = 'peso-est';
+              pesoEl.textContent = '≈ ' + pesoTotal.toFixed(pesoTotal < 1 ? 3 : 2).replace('.',',') + ' kg';
+              pesoEl.title = 'Toque para ajustar o peso médio por unidade';
+              pesoEl.onclick = () => {
+                const atualG = Math.round(pesoUnit * 1000);
+                const resp = prompt(`Peso médio de 1 ${item.nome} (em gramas):`, atualG);
+                if(resp != null){
+                  const g = parseInt(String(resp).replace(/\D/g,''), 10);
+                  if(g > 0) update(ref(db, pathItem(item.id)), { pesoUnit: g / 1000 });
+                }
+              };
+              linha2.appendChild(pesoEl);
+            } else {
+              const vezes = document.createElement('span');
+              vezes.className = 'vezes';
+              vezes.textContent = '× ' + brl(item.preco);
+              linha2.appendChild(vezes);
+            }
           }
 
           const sub = document.createElement('span');
@@ -763,13 +1037,20 @@ function render(){
 
     const acoes = document.createElement('span');
     acoes.className = 'acoes';
-    // alternar entre "por unidade" (🔢) e "por kg" (⚖️)
+    // cicla: unidade (🔢) -> kg estimado (⚖️) -> peso exato (⚖️✏️) -> unidade...
     const btnModo = document.createElement('button');
-    const porKgAtual = ehPorKg(item);
-    btnModo.textContent = porKgAtual ? '⚖️' : '🔢';
-    btnModo.title = porKgAtual ? 'Vendido por kg (tocar p/ mudar para unidade)' : 'Vendido por unidade (tocar p/ mudar para kg)';
-    btnModo.setAttribute('aria-label','Alternar unidade/kg');
-    btnModo.onclick = () => update(ref(db, pathItem(item.id)), { modo: porKgAtual ? 'unidade' : 'kg' });
+    const modoAtual = modoDe(item);
+    const proximo = { unidade:'kg', kg:'exato', exato:'unidade' };
+    const rotulo = { unidade:'🔢', kg:'⚖️', exato:'⚖️✏️' };
+    const titulo = {
+      unidade:'Por unidade (tocar → peso médio por kg)',
+      kg:'Por kg estimado (tocar → peso exato da balança)',
+      exato:'Peso exato em gramas (tocar → voltar para unidade)'
+    };
+    btnModo.textContent = rotulo[modoAtual];
+    btnModo.title = titulo[modoAtual];
+    btnModo.setAttribute('aria-label','Alternar modo de medida');
+    btnModo.onclick = () => update(ref(db, pathItem(item.id)), { modo: proximo[modoAtual] });
     const btnEdit = document.createElement('button');
     btnEdit.textContent = '✏️';
     btnEdit.setAttribute('aria-label','Editar');
@@ -816,9 +1097,11 @@ function confirmarEdicao(id, valor){
   update(ref(db, pathItem(id)), { nome: valor });
 }
 
-function adicionarItem(nome, qtd){
+function adicionarItem(nome, qtd, marcaId){
   const id = uid();
-  set(ref(db, pathItem(id)), { nome, carrinho: false, preco: null, qtd: qtd || 1, ordem: Date.now() });
+  const dados = { nome, carrinho: false, preco: null, qtd: qtd || 1, ordem: Date.now() };
+  if(marcaId) dados.marcaId = marcaId;
+  set(ref(db, pathItem(id)), dados);
 }
 
 // ---- eventos ----
@@ -832,24 +1115,76 @@ $('selLista').onchange = function(){
 $('btnNovaLista').onclick = () => {
   $('nlData').value = hojeISO();
   $('nlNome').value = '';
+  preencherSelectMercados($('nlMercado'), $('selMercado') ? $('selMercado').value : '');
   $('novaListaBox').classList.toggle('aberto');
   $('nlNome').focus();
 };
 $('btnCancelarLista').onclick = () => $('novaListaBox').classList.remove('aberto');
 $('btnCriarLista').onclick = () => {
   if(!db) return;
-  criarLista($('nlNome').value.trim() || 'Compras', $('nlData').value || hojeISO());
+  const mercadoId = $('nlMercado') ? $('nlMercado').value : '';
+  criarLista($('nlNome').value.trim() || 'Compras', $('nlData').value || hojeISO(), mercadoId);
   $('novaListaBox').classList.remove('aberto');
   toast('Lista criada.');
 };
 
+// seletor de mercado do topo: salva o mercado escolhido NA lista atual
+$('selMercado').onchange = function(){
+  if(!db || !listaAtual) return;
+  const mercadoId = this.value;
+  update(ref(db, pathLista(listaAtual)), { mercadoId: mercadoId || null });
+};
+
+// gestão de mercados (⚙️)
+$('btnGerirMercados').onclick = () => {
+  $('gerirMercadosBox').classList.toggle('aberto');
+  if($('gerirMercadosBox').classList.contains('aberto')) $('gmNome').focus();
+};
+$('btnFecharMercados').onclick = () => $('gerirMercadosBox').classList.remove('aberto');
+$('btnAddMercado').onclick = () => {
+  if(!db) return;
+  const nome = $('gmNome').value.trim();
+  if(!nome){ toast('Digite o nome do mercado.'); return; }
+  // evita duplicado (ignorando maiúsculas/acento)
+  const existe = Object.values(mercados).some(m => normaliza(m) === normaliza(nome));
+  if(existe){ toast('Esse mercado já está cadastrado.'); $('gmNome').value=''; return; }
+  const id = uid();
+  set(ref(db, `mercado/${APP_ID}/meta/mercados/${id}`), nome);
+  $('gmNome').value = '';
+  toast('Mercado cadastrado.');
+};
+$('gmNome').onkeydown = ev => { if(ev.key === 'Enter') $('btnAddMercado').click(); };
+
+// gestão de marcas (🏷️)
+$('btnGerirMarcas').onclick = () => {
+  $('gerirMarcasBox').classList.toggle('aberto');
+  if($('gerirMarcasBox').classList.contains('aberto')) $('mkNome').focus();
+};
+$('btnFecharMarcas').onclick = () => $('gerirMarcasBox').classList.remove('aberto');
+$('btnAddMarca').onclick = () => {
+  if(!db) return;
+  const nome = $('mkNome').value.trim();
+  if(!nome){ toast('Digite o nome da marca.'); return; }
+  const existe = Object.values(marcas).some(m => normaliza(m) === normaliza(nome));
+  if(existe){ toast('Essa marca já está cadastrada.'); $('mkNome').value=''; return; }
+  const id = uid();
+  set(ref(db, `mercado/${APP_ID}/meta/marcas/${id}`), nome);
+  $('mkNome').value = '';
+  toast('Marca cadastrada.');
+};
+$('mkNome').onkeydown = ev => { if(ev.key === 'Enter') $('btnAddMarca').click(); };
+
 $('btnAdd').onclick = () => {
   const inp = $('novoItem');
-  const nome = inp.value.trim();
+  let nome = inp.value.trim();
   if(!nome || !db || !listaAtual) return;
   inp.value = '';
   inp.focus();
-  adicionarItem(nome);
+  // se o texto contém uma marca conhecida, separa
+  const marca = detectarMarca(nome);
+  let marcaId = null;
+  if(marca && marca.nomeSemMarca){ nome = limpaNome(marca.nomeSemMarca); marcaId = marca.marcaId; }
+  adicionarItem(nome, 1, marcaId);
 };
 $('novoItem').onkeydown = ev => { if(ev.key === 'Enter') $('btnAdd').click(); };
 
@@ -882,7 +1217,7 @@ $('btnConfirmarImport').onclick = () => {
       ex.qtd = novaQtd;
       somados++;
     } else {
-      adicionarItem(n.nome, n.qtd);
+      adicionarItem(n.nome, n.qtd, n.marcaId);
       existentes[chave] = { id: null, qtd: n.qtd };
       add++;
     }
