@@ -54,6 +54,25 @@
   .qr-chave{font-size:.72rem;word-break:break-all;color:var(--tinta);margin-bottom:10px;line-height:1.5}
   .qr-chave b{color:var(--verde)}
   .qr-obs{font-size:.68rem;color:var(--cinza);margin-top:8px;line-height:1.5}
+  .nota-import{margin-top:14px;border-top:1px dashed #CFC9BA;padding-top:12px}
+  .nota-sep{font-size:.7rem;color:var(--cinza);margin-bottom:8px;line-height:1.5}
+  .nota-campos{display:flex;gap:8px;margin-bottom:8px}
+  .nota-campos > div{flex:1;min-width:0}
+  .nota-campos label{font-size:.66rem;color:var(--cinza);display:block;margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em}
+  .nota-campos select, .nota-campos input{
+    width:100%;font:inherit;padding:8px;border:1.5px solid var(--tinta);border-radius:2px;background:#fff;
+  }
+  .nota-import textarea{
+    width:100%;min-height:90px;font:inherit;font-size:.8rem;padding:10px;
+    border:1.5px solid var(--tinta);border-radius:2px;resize:vertical;background:#fff;
+  }
+  .nota-preview{margin-top:12px;border:1.5px solid var(--verde);border-radius:3px;padding:10px;background:#F4FAF6}
+  .nota-preview ul{list-style:none;margin-bottom:10px}
+  .nota-preview li{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px dashed #CFC9BA;font-size:.8rem}
+  .nota-preview li:last-child{border-bottom:none}
+  .nota-preview .np-preco{font-weight:700;color:var(--verde);white-space:nowrap}
+  .nota-preview .np-marca{font-size:.66rem;color:var(--cinza)}
+  .criar.full{width:100%}
   .ajuste-sec{padding:16px 0;border-bottom:1px dashed #CFC9BA}
   .ajuste-sec:last-child{border-bottom:none}
   .ajuste-sec h3{font-size:.85rem;letter-spacing:.05em;margin-bottom:4px}
@@ -434,6 +453,29 @@
           </div>
           <p class="qr-obs" id="qrObs"></p>
         </div>
+
+        <div class="nota-import">
+          <p class="nota-sep">Cole os itens da nota para alimentar o histórico de preços:</p>
+          <div class="nota-campos">
+            <div>
+              <label for="notaMercado">Mercado</label>
+              <select id="notaMercado"></select>
+            </div>
+            <div>
+              <label for="notaData">Data</label>
+              <input id="notaData" type="date">
+            </div>
+          </div>
+          <textarea id="notaTexto" placeholder="VH TTO POR REGUENGOS DOC 750ML	6	UN	67,900	407,40"></textarea>
+          <div class="acoes2">
+            <button class="criar" id="btnAnalisarNota">Analisar itens</button>
+            <button id="btnLimparNota">Limpar</button>
+          </div>
+          <div id="notaPreview" class="nota-preview" style="display:none">
+            <ul id="notaPreviewLista"></ul>
+            <button class="criar full" id="btnConfirmarNota">＋ Adicionar ao histórico</button>
+          </div>
+        </div>
       </section>
 
       <!-- Mercados -->
@@ -691,6 +733,8 @@ function renderMercados(){
   preencherSelectMercados($('selMercado'), mercadoAtual);
   // seletor dentro de "nova lista" (mantém o que já estava escolhido)
   preencherSelectMercados($('nlMercado'), $('nlMercado') ? $('nlMercado').value : '');
+  // seletor do importador de nota (mantém escolha; default = mercado da lista atual)
+  preencherSelectMercados($('notaMercado'), $('notaMercado') && $('notaMercado').value ? $('notaMercado').value : mercadoAtual);
   // lista de gestão
   const gm = $('gmLista');
   if(gm){
@@ -751,6 +795,71 @@ function removerHistorico(nome){
   if(!db) return;
   const chave = chaveProduto(nome);
   if(chave && listaAtual) remove(ref(db, `mercado/${APP_ID}/historico/${chave}/${listaAtual}`));
+}
+
+// ---- importação de nota fiscal (alimenta o histórico) ----
+function parseNumBR(s){
+  s = String(s).trim();
+  if(s.indexOf(',') >= 0) s = s.replace(/\./g,'').replace(',','.'); // 1.234,56 -> 1234.56
+  const v = parseFloat(s);
+  return isFinite(v) ? v : null;
+}
+// data a partir da chave de acesso (dígitos 3-6 = AAMM); dia não vem na chave
+function dataDaChave(chave){
+  if(!chave || chave.length < 6) return '';
+  const yy = chave.slice(2,4), mm = chave.slice(4,6);
+  const mi = parseInt(mm,10);
+  if(!(mi >= 1 && mi <= 12)) return '';
+  return (2000 + parseInt(yy,10)) + '-' + mm + '-01';
+}
+// interpreta o texto colado da SEFAZ: linhas "NOME  QTD  UN  V.UNIT  V.TOTAL"
+function parsearNota(texto){
+  const out = [];
+  texto.split(/\r?\n/).forEach(linha => {
+    if(!linha.trim()) return;
+    let nome, qtd, un, precoUnit;
+    if(linha.indexOf('\t') >= 0){
+      const campos = linha.split('\t').map(s => s.trim()).filter(s => s !== '');
+      if(campos.length >= 5){
+        nome = campos[0]; qtd = parseNumBR(campos[1]);
+        un = (campos[2]||'').toUpperCase(); precoUnit = parseNumBR(campos[3]);
+      }
+    }
+    if(nome == null){
+      // fallback: separado por espaços (nome pode ter espaços; ancora nos 4 campos finais)
+      const m = linha.trim().match(/^(.+?)\s+(\d+(?:[.,]\d+)?)\s+([A-Za-zÇç]+)\s+(\d[\d.,]*)\s+(\d[\d.,]*)$/);
+      if(m){ nome = m[1].replace(/\s+/g,' ').trim(); qtd = parseNumBR(m[2]); un = m[3].toUpperCase(); precoUnit = parseNumBR(m[4]); }
+    }
+    if(!nome || qtd == null || precoUnit == null) return;
+    const modo = (un === 'KG') ? 'exato' : 'unidade';
+    // separa marca conhecida do nome
+    let marcaId = null, nomeFinal = nome;
+    const marca = detectarMarca(nome);
+    if(marca && marca.nomeSemMarca){ nomeFinal = limpaNome(marca.nomeSemMarca); marcaId = marca.marcaId; }
+    out.push({ nome: nomeFinal, qtd, un, modo, preco: precoUnit, marcaId });
+  });
+  return out;
+}
+// grava os itens de uma nota no histórico (1 registro por produto, sob o id da nota)
+function importarNotaHistorico(itens, mercadoId, dataISO, notaId){
+  if(!db) return 0;
+  const mNome = mercadoId ? nomeMercado(mercadoId) : null;
+  let n = 0;
+  itens.forEach(it => {
+    const chave = chaveProduto(it.nome);
+    if(!chave) return;
+    const reg = {
+      nome: it.nome, preco: it.preco, modo: it.modo,
+      marcaId: it.marcaId || null,
+      marca: it.marcaId ? nomeMarca(it.marcaId) : null,
+      mercadoId: mercadoId || null, mercado: mNome,
+      oferta: false, data: dataISO || hojeISO(),
+      origem: 'nota', em: Date.now()
+    };
+    set(ref(db, `mercado/${APP_ID}/historico/${chave}/${notaId}`), reg);
+    n++;
+  });
+  return n;
 }
 // lê o histórico de um produto (todas as compras), ordenado do mais recente
 function lerHistorico(nome){
@@ -1417,14 +1526,18 @@ $('btnScanQR').onclick = () => {
       // sucesso: para a câmera e mostra o resultado
       ultimaUrlNota = texto;
       const chave = extrairChave(texto);
+      ultimaChaveNota = chave || '';
       pararScanner();
       $('btnScanQR').style.display = 'block';
       $('btnScanQR').textContent = '📷 Escanear outra';
       $('qrChave').innerHTML = chave
         ? 'Chave de acesso:<br><b>' + formatarChave(chave) + '</b>'
         : 'QR lido, mas não encontrei uma chave de 44 dígitos. Você ainda pode abrir o link.';
-      $('qrObs').textContent = 'Para importar os itens automaticamente é preciso o proxy (Cloudflare Worker) — me avise quando quiser ativar. Por enquanto, abra a nota e copie os itens para o "📋 Importar do WhatsApp".';
+      $('qrObs').textContent = 'Toque em "Abrir nota na SEFAZ", copie a lista de itens e cole no campo abaixo para alimentar o histórico.';
       $('qrResultado').style.display = 'block';
+      // pré-preenche a data da nota a partir da chave (ano/mês)
+      const dNota = dataDaChave(chave);
+      if(dNota && $('notaData')) $('notaData').value = dNota;
     },
     () => { /* frame sem QR: ignora */ }
   ).catch(err => {
@@ -1437,6 +1550,52 @@ $('btnScanQR').onclick = () => {
 $('btnScanNovo').onclick = () => { $('btnScanQR').click(); };
 $('btnAbrirNota').onclick = () => {
   if(ultimaUrlNota) window.open(ultimaUrlNota, '_blank');
+};
+
+// ---- importador de nota (preview + confirmação) ----
+let notaAnalisada = null;   // itens já parseados aguardando confirmação
+let ultimaChaveNota = '';
+
+$('btnAnalisarNota').onclick = () => {
+  const itens = parsearNota($('notaTexto').value);
+  const box = $('notaPreview');
+  const ul = $('notaPreviewLista');
+  ul.innerHTML = '';
+  if(!itens.length){
+    box.style.display = 'none';
+    notaAnalisada = null;
+    toast('Não reconheci itens. Confira se colou no formato da nota.');
+    return;
+  }
+  itens.forEach(it => {
+    const li = document.createElement('li');
+    const esq = document.createElement('span');
+    const marcaTxt = it.marcaId ? ` <span class="np-marca">🏷️ ${nomeMarca(it.marcaId)}</span>` : '';
+    esq.innerHTML = it.nome + marcaTxt;
+    const dir = document.createElement('span');
+    dir.className = 'np-preco';
+    dir.textContent = brl(it.preco) + (it.modo === 'exato' ? '/kg' : '');
+    li.append(esq, dir);
+    ul.appendChild(li);
+  });
+  notaAnalisada = itens;
+  box.style.display = 'block';
+};
+$('btnLimparNota').onclick = () => {
+  $('notaTexto').value = '';
+  $('notaPreview').style.display = 'none';
+  notaAnalisada = null;
+};
+$('btnConfirmarNota').onclick = () => {
+  if(!db || !notaAnalisada || !notaAnalisada.length) return;
+  const mercadoId = $('notaMercado') ? $('notaMercado').value : '';
+  const dataISO = $('notaData').value || hojeISO();
+  const notaId = ultimaChaveNota ? ('n' + ultimaChaveNota) : ('nota-' + uid());
+  const n = importarNotaHistorico(notaAnalisada, mercadoId, dataISO, notaId);
+  $('notaTexto').value = '';
+  $('notaPreview').style.display = 'none';
+  notaAnalisada = null;
+  toast(n + ' item(ns) da nota adicionados ao histórico.');
 };
 // para a câmera se fechar o painel de ajustes
 $('btnFecharAjustes').addEventListener('click', pararScanner);
@@ -1631,6 +1790,7 @@ $('btnWhatsLink').onclick = () => {
   window.open('https://wa.me/?text=' + encodeURIComponent(texto), '_blank');
 };
 
+if($('notaData')) $('notaData').value = hojeISO();
 render();
 </script>
 </body>
