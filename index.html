@@ -62,6 +62,14 @@
   .nota-campos select, .nota-campos input{
     width:100%;font:inherit;padding:8px;border:1.5px solid var(--tinta);border-radius:2px;background:#fff;
   }
+  .nota-campos input[type="date"]{
+    -webkit-appearance:none;appearance:none;display:block;
+    width:100%!important;min-width:0;max-width:100%;
+    -webkit-min-logical-width:calc(100% - 18px);
+    height:38px;text-align:left;overflow:hidden;box-sizing:border-box;
+  }
+  .nota-campos input[type="date"]::-webkit-date-and-time-value{text-align:left;margin:0}
+  .nota-campos > div{overflow:hidden}
   .nota-import textarea{
     width:100%;min-height:90px;font:inherit;font-size:.8rem;padding:10px;
     border:1.5px solid var(--tinta);border-radius:2px;resize:vertical;background:#fff;
@@ -867,9 +875,30 @@ function lerHistorico(nome){
   const bloco = (historico && historico[chave]) || {};
   return Object.values(bloco).sort((a,b) => (b.data||'').localeCompare(a.data||'') || (b.em||0)-(a.em||0));
 }
+// busca no histórico: exato primeiro; se não achar, busca parcial (o nome digitado
+// aparece dentro do nome da nota, ou vice-versa, ou compartilham uma palavra)
+function buscarHistorico(nome){
+  const exato = lerHistorico(nome);
+  if(exato.length) return { registros: exato, exato: true };
+  const termo = normaliza(nome);
+  if(!termo) return { registros: [], exato: true };
+  const toks = termo.split(/\s+/).filter(t => t.length >= 4);
+  let cand = [];
+  Object.entries(historico || {}).forEach(([chave, bloco]) => {
+    const regs = Object.values(bloco);
+    if(!regs.length) return;
+    const nomeHist = normaliza(regs[0].nome || chave.replace(/-/g,' '));
+    const bate = nomeHist.indexOf(termo) >= 0
+      || termo.indexOf(nomeHist) >= 0
+      || toks.some(t => nomeHist.indexOf(t) >= 0);
+    if(bate) cand = cand.concat(regs);
+  });
+  cand.sort((a,b) => (b.data||'').localeCompare(a.data||'') || (b.em||0)-(a.em||0));
+  return { registros: cand, exato: false };
+}
 // abre o modal com o histórico de preços de um produto
 function abrirHistorico(nome){
-  const regs = lerHistorico(nome);
+  const regs = buscarHistorico(nome).registros;
   $('histTitulo').textContent = '📊 ' + nome;
   const corpo = $('histCorpo');
   corpo.innerHTML = '';
@@ -1215,8 +1244,8 @@ function render(){
       nome.onclick = () => { editandoId = item.id; render(); };
       meio.appendChild(nome);
 
-      // ícone de histórico (só aparece se o produto já tem histórico)
-      if(lerHistorico(item.nome).length){
+      // ícone de histórico (aparece se o produto tem histórico, exato ou parcial)
+      if(buscarHistorico(item.nome).registros.length){
         const hb = document.createElement('button');
         hb.className = 'hist-btn';
         hb.textContent = '📊';
@@ -1274,12 +1303,17 @@ function render(){
         box.append(inp, ok);
         meio.appendChild(box);
         // sugestão: última compra deste produto (não preenche, só mostra)
-        const hist = lerHistorico(item.nome);
+        const busca = buscarHistorico(item.nome);
+        const hist = busca.registros;
         const ultima = hist.find(h => h.listaId !== listaAtual) || hist[0];
         if(ultima && ultima.preco != null){
           const dica = document.createElement('span');
           dica.className = 'preco-dica';
-          dica.textContent = 'última: ' + brl(ultima.preco) + (ultima.mercado ? ' · ' + ultima.mercado : '') + (ultima.oferta ? ' 🏷️' : '');
+          const sufModo = (ultima.modo && ultima.modo !== 'unidade') ? '/kg' : '';
+          dica.textContent = 'última: ' + brl(ultima.preco) + sufModo
+            + (ultima.mercado ? ' · ' + ultima.mercado : '')
+            + (ultima.oferta ? ' 🏷️' : '')
+            + (!busca.exato && ultima.nome ? ' — ' + ultima.nome : '');
           meio.appendChild(dica);
         }
         setTimeout(() => inp.focus(), 0);
