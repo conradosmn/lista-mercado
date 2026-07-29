@@ -44,6 +44,16 @@
   .ajustes-head h2{font-size:1rem;letter-spacing:.15em;text-transform:uppercase}
   .fechar-x{border:1.5px solid var(--tinta);background:#fff;border-radius:2px;width:34px;height:34px;cursor:pointer;font-size:.9rem}
   .ajustes-scroll{overflow-y:auto;padding:8px 18px 40px;flex:1}
+  .btn-scan{
+    width:100%;font:inherit;font-size:.82rem;font-weight:700;padding:11px;cursor:pointer;
+    border:1.5px solid var(--verde);background:var(--verde);color:#fff;border-radius:2px;
+  }
+  .qr-reader{width:100%;margin-top:10px;border-radius:3px;overflow:hidden}
+  .qr-reader:empty{margin-top:0}
+  .qr-resultado{margin-top:12px;border:1.5px solid var(--verde);background:#F4FAF6;border-radius:3px;padding:12px}
+  .qr-chave{font-size:.72rem;word-break:break-all;color:var(--tinta);margin-bottom:10px;line-height:1.5}
+  .qr-chave b{color:var(--verde)}
+  .qr-obs{font-size:.68rem;color:var(--cinza);margin-top:8px;line-height:1.5}
   .ajuste-sec{padding:16px 0;border-bottom:1px dashed #CFC9BA}
   .ajuste-sec:last-child{border-bottom:none}
   .ajuste-sec h3{font-size:.85rem;letter-spacing:.05em;margin-bottom:4px}
@@ -410,6 +420,22 @@
     </div>
 
     <div class="ajustes-scroll">
+      <!-- Nota fiscal (QR) -->
+      <section class="ajuste-sec">
+        <h3>📷 Escanear nota fiscal</h3>
+        <p>Leia o QR Code do cupom (NFC-e). O app captura a chave de acesso e abre a nota na SEFAZ.</p>
+        <button id="btnScanQR" class="btn-scan">📷 Abrir câmera</button>
+        <div id="qrReader" class="qr-reader"></div>
+        <div id="qrResultado" class="qr-resultado" style="display:none">
+          <div class="qr-chave" id="qrChave"></div>
+          <div class="acoes2">
+            <button class="criar" id="btnAbrirNota">🔗 Abrir nota na SEFAZ</button>
+            <button id="btnScanNovo">📷 Nova leitura</button>
+          </div>
+          <p class="qr-obs" id="qrObs"></p>
+        </div>
+      </section>
+
       <!-- Mercados -->
       <section class="ajuste-sec">
         <h3>🏬 Mercados</h3>
@@ -466,6 +492,7 @@
 
 <div class="toast" id="toast"></div>
 
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, onValue, set, update, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
@@ -1355,6 +1382,65 @@ $('ajustesOverlay').onclick = (e) => { if(e.target === $('ajustesOverlay')) $('a
 // modal de histórico
 $('btnFecharHist').onclick = () => $('histOverlay').classList.remove('aberto');
 $('histOverlay').onclick = (e) => { if(e.target === $('histOverlay')) $('histOverlay').classList.remove('aberto'); };
+
+// ---- scanner de QR da nota fiscal (NFC-e) ----
+let qrLeitor = null;
+let ultimaUrlNota = '';
+
+function pararScanner(){
+  if(qrLeitor){
+    qrLeitor.stop().then(() => { qrLeitor.clear(); qrLeitor = null; }).catch(() => { qrLeitor = null; });
+  }
+}
+// extrai a chave de acesso (44 dígitos) do texto do QR
+function extrairChave(texto){
+  // procura parâmetro p= (padrão NFC-e) ou qualquer sequência de 44 dígitos
+  const m = String(texto).match(/\d{44}/);
+  return m ? m[0] : '';
+}
+function formatarChave(ch){
+  return ch.replace(/(\d{4})/g, '$1 ').trim();
+}
+
+$('btnScanQR').onclick = () => {
+  if(typeof Html5Qrcode === 'undefined'){
+    toast('Leitor de QR não carregou. Confira a conexão e recarregue.');
+    return;
+  }
+  $('qrResultado').style.display = 'none';
+  $('btnScanQR').style.display = 'none';
+  qrLeitor = new Html5Qrcode('qrReader');
+  qrLeitor.start(
+    { facingMode: 'environment' },
+    { fps: 10, qrbox: { width: 240, height: 240 } },
+    (texto) => {
+      // sucesso: para a câmera e mostra o resultado
+      ultimaUrlNota = texto;
+      const chave = extrairChave(texto);
+      pararScanner();
+      $('btnScanQR').style.display = 'block';
+      $('btnScanQR').textContent = '📷 Escanear outra';
+      $('qrChave').innerHTML = chave
+        ? 'Chave de acesso:<br><b>' + formatarChave(chave) + '</b>'
+        : 'QR lido, mas não encontrei uma chave de 44 dígitos. Você ainda pode abrir o link.';
+      $('qrObs').textContent = 'Para importar os itens automaticamente é preciso o proxy (Cloudflare Worker) — me avise quando quiser ativar. Por enquanto, abra a nota e copie os itens para o "📋 Importar do WhatsApp".';
+      $('qrResultado').style.display = 'block';
+    },
+    () => { /* frame sem QR: ignora */ }
+  ).catch(err => {
+    $('btnScanQR').style.display = 'block';
+    toast('Não consegui abrir a câmera. Verifique a permissão.');
+    qrLeitor = null;
+  });
+};
+
+$('btnScanNovo').onclick = () => { $('btnScanQR').click(); };
+$('btnAbrirNota').onclick = () => {
+  if(ultimaUrlNota) window.open(ultimaUrlNota, '_blank');
+};
+// para a câmera se fechar o painel de ajustes
+$('btnFecharAjustes').addEventListener('click', pararScanner);
+$('ajustesOverlay').addEventListener('click', (e) => { if(e.target === $('ajustesOverlay')) pararScanner(); });
 
 $('btnAddMercado').onclick = () => {
   if(!db) return;
